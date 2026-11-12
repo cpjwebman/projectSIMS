@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Student Management System Reports Documentation</title>
+    <style>
+        @page { size: A4; margin: 17mm 15mm 18mm; }
+        :root { color: #172033; font: 9.5pt/1.46 "Segoe UI", Arial, sans-serif; }
+        body { margin: 0; }
+        h1, h2, h3 { color: #102a43; page-break-after: avoid; }
+        h1 { font-size: 26pt; line-height: 1.15; }
+        h2 { margin-top: 22px; padding-bottom: 5px; border-bottom: 1px solid #cbd5e1; font-size: 16pt; }
+        h3 { margin-top: 15px; font-size: 11pt; }
+        p { margin: 6px 0 9px; }
+        li { margin: 3px 0; }
+        code, pre { font-family: Consolas, "Courier New", monospace; font-size: 8.2pt; }
+        code { padding: 1px 3px; background: #f1f5f9; }
+        table { width: 100%; margin: 7px 0 13px; border-collapse: collapse; font-size: 8.1pt; page-break-inside: auto; }
+        thead { display: table-header-group; }
+        tr { page-break-inside: avoid; }
+        th, td { padding: 5px 6px; border: 1px solid #cbd5e1; text-align: left; vertical-align: top; }
+        th { color: #102a43; background: #eaf0f8; }
+        pre { padding: 9px; border: 1px solid #dbe3ec; background: #f8fafc; white-space: pre-wrap; page-break-inside: avoid; }
+        .cover { min-height: 237mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+        .eyebrow { color: #2563eb; font-size: 9pt; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+        .subtitle { max-width: 137mm; color: #526174; font-size: 13pt; }
+        .meta { margin-top: 25px; padding-top: 11px; border-top: 2px solid #2563eb; color: #526174; }
+        .callout { margin: 10px 0; padding: 9px 11px; border-left: 4px solid #2563eb; background: #eff6ff; page-break-inside: avoid; }
+        .warning { border-left-color: #d97706; background: #fffbeb; }
+        .small { color: #526174; font-size: 8pt; }
+        .section-break { page-break-before: always; }
+    </style>
+</head>
+<body>
+    <section class="cover">
+        <p class="eyebrow">SMS | Reporting Guide</p>
+        <h1>Dashboard Reports<br>&amp; Metrics</h1>
+        <p class="subtitle">How to use and interpret the admin/staff dashboard's filters, summary cards, enrollment charts, course totals, and recent activity.</p>
+        <div class="meta">
+            <p><strong>Dashboard:</strong> <code>/dashboard</code></p>
+            <p><strong>Controller:</strong> <code>DashboardController@index</code></p>
+            <p><strong>Audience:</strong> Active admin/staff accounts with verified email</p>
+        </div>
+    </section>
+    <h2>1. Report scope</h2>
+    <p>The reporting feature is an interactive dashboard rendered as a web page. It summarizes normalized student enrollment records, enrollment status, monthly activity, and course totals. It is not a separate analytics API or a downloadable spreadsheet/PDF export function.</p>
+    <div class="callout warning"><strong>No export endpoint is currently defined.</strong> The dashboard provides on-screen cards, charts, and tables; the application does not expose report CSV, Excel, or PDF download routes in the reviewed route set.</div>
+    <h2>2. Access and navigation</h2>
+    <p>Open <code>/dashboard</code> after signing in as an active administrator or staff member with verified email. The root route sends staff/admin users to the staff dashboard and students to the student portal. Students do not have access to the aggregate dashboard; they see their own enrollment history on <code>/student/dashboard</code>.</p>
+    <h2>3. Dashboard filters</h2>
+    <table>
+        <thead><tr><th>Query parameter</th><th>Accepted values</th><th>Default and effect</th></tr></thead>
+        <tbody>
+            <tr><td><code>year</code></td><td>Integer from 1900 through next calendar year.</td><td>Defaults to current year; scopes the reporting date window.</td></tr>
+            <tr><td><code>month</code></td><td><code>all</code> or 1 through 12.</td><td>Defaults to all months; narrows enrollment and activity counts to a month when selected.</td></tr>
+            <tr><td><code>status</code></td><td><code>all</code> or a status present in the enrollment table; pending and approved are always included as choices.</td><td>Defaults to all statuses; filters enrollment-related metrics by status.</td></tr>
+        </tbody>
+    </table>
+    <p>Filters are submitted as GET parameters, so the selected view can be bookmarked or shared with authorized users. “Reset filters” returns to the default view.</p>
+    <pre>/dashboard?year=2026&amp;month=11&amp;status=pending</pre>
+    <h2>4. Summary cards</h2>
+    <table>
+        <thead><tr><th>Metric</th><th>Meaning</th><th>Filter behavior</th></tr></thead>
+        <tbody>
+            <tr><td>Total users</td><td>Count of all user accounts.</td><td>Global count; not narrowed by date/status.</td></tr>
+            <tr><td>Total students</td><td>Count of all student profiles.</td><td>Global count; not narrowed by date/status.</td></tr>
+            <tr><td>Total courses</td><td>Count of all courses.</td><td>Global count; not narrowed by date/status.</td></tr>
+            <tr><td>Enrollments in period</td><td>Count of normalized student enrollments whose enrollment date matches the selected period.</td><td>Filtered by selected year/month and status.</td></tr>
+            <tr><td>Pending requests</td><td>Pending enrollment count for the selected period.</td><td>Period-filtered; displayed independently of selected status so the pending card remains meaningful.</td></tr>
+            <tr><td>Approved requests</td><td>Approved enrollment count for the selected period.</td><td>Period-filtered; displayed independently of selected status.</td></tr>
+            <tr><td>Students without enrollments</td><td>Student profiles with no normalized student-enrollment relation.</td><td>Global relation count; not narrowed by period.</td></tr>
+            <tr><td>Subjects</td><td>Count of all subjects.</td><td>Global count; not narrowed by period/status.</td></tr>
+        </tbody>
+    </table>
+    <h2>5. Charts and tables</h2>
+    <table>
+        <thead><tr><th>Dashboard section</th><th>Metric basis</th><th>Interpretation</th></tr></thead>
+        <tbody>
+            <tr><td>Monthly enrollments</td><td>Enrollment counts grouped by month using <code>enrollment_date</code>.</td><td>Reflects the selected year and status; selecting one month narrows the query to that month.</td></tr>
+            <tr><td>Request status distribution</td><td>Counts grouped by status for the filtered enrollment set.</td><td>Status labels include pending/approved and other statuses present in data; zero counts are shown.</td></tr>
+            <tr><td>Monthly request activity</td><td>Counts grouped by month using record <code>created_at</code>, separately constrained by selected date period/status.</td><td>Tracks when request records were created, which can differ from their enrollment date.</td></tr>
+            <tr><td>Enrollments by course chart</td><td>Filtered enrollment count grouped by course.</td><td>Course labels follow course name order.</td></tr>
+            <tr><td>Enrollments per course table</td><td>Course name, code, and filtered enrollment count.</td><td>Includes courses with zero matching enrollments.</td></tr>
+            <tr><td>Recent activity</td><td>Latest enrollment-date/creation-time records in the filtered result.</td><td>At most 8 rows; includes student, course, up to 2 subject names, date, and status.</td></tr>
+        </tbody>
+    </table>
+    <p>Charts are rendered in the browser with Chart.js. The server supplies twelve month labels and aligned count arrays. Database-specific date expressions are selected for SQLite, PostgreSQL, or MySQL-compatible drivers.</p>
+    <h2 class="section-break">6. Interpretation and data definitions</h2>
+    <ul>
+        <li>Dashboard enrollment metrics use the normalized <code>student_enrollments</code> table, not the legacy <code>enrollments</code> table.</li>
+        <li>Enrollment period filtering uses <code>enrollment_date</code>; request activity uses <code>created_at</code>.</li>
+        <li>School year (for example 2026-2027) is an academic grouping field, separate from calendar year/month dashboard filters.</li>
+        <li>A student's global enrolled/unenrolled status is based on whether any normalized enrollment relation exists, regardless of selected period.</li>
+        <li>Pending and approved card metrics are computed for the selected time window; the status selector affects the main filtered result and related chart/table totals.</li>
+        <li>Charts represent current database values and are recalculated per dashboard request; there is no separate report snapshot or export archive.</li>
+    </ul>
+    <h2>7. Student report view</h2>
+    <p>The student portal is a personal academic-history view, not an administrative aggregate report. It displays the signed-in student's linked profile, enrollment groups by school year, course/year placement, subject list, units, and statuses. Students can cancel their own pending enrollment requests. The page does not display other students' records or system-wide totals.</p>
+    <h2>8. Operational notes and limitations</h2>
+    <ul>
+        <li>Counts may differ between global cards and period charts because only enrollment-specific metrics are period-filtered.</li>
+        <li>Recent activity is limited to 8 rows; use the enrollment-management page for full searchable/filterable history.</li>
+        <li>The dashboard does not provide CSV/Excel/PDF export, saved filters, scheduled reports, or historical snapshots.</li>
+        <li>For external reporting, apply appropriate privacy controls and least-privilege access before exporting student data.</li>
+    </ul>
+    <h2>9. Verification and source files</h2>
+    <p>Dashboard functionality is covered by feature tests for displayed metrics, charts, filters, and recent records. Useful commands:</p>
+    <pre>php artisan route:list --path=dashboard
+php artisan test --filter=DashboardTest</pre>
+    <p>Implementation: <code>app/Http/Controllers/DashboardController.php</code>, <code>resources/views/dashboard.blade.php</code>, <code>routes/web.php</code>, and <code>tests/Feature/DashboardTest.php</code>. Student self-service reporting is in <code>StudentPortalController</code> and <code>resources/views/student/dashboard.blade.php</code>.</p>
+</body>
+</html>

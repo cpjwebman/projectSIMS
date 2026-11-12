@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Portfolio - Student Management System</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 17mm 16mm 18mm;
+        }
+
+        :root {
+            color: #172033;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.48;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        h1, h2, h3 {
+            color: #102a43;
+            page-break-after: avoid;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 31pt;
+            line-height: 1.08;
+        }
+
+        h2 {
+            margin: 23px 0 9px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 16pt;
+        }
+
+        h3 {
+            margin: 15px 0 5px;
+            font-size: 11pt;
+        }
+
+        p {
+            margin: 6px 0 10px;
+        }
+
+        ul {
+            margin: 5px 0 12px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin: 3px 0;
+        }
+
+        .cover {
+            min-height: 237mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+        }
+
+        .eyebrow {
+            margin-bottom: 15px;
+            color: #2563eb;
+            font-size: 9pt;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            max-width: 137mm;
+            color: #526174;
+            font-size: 15pt;
+        }
+
+        .cover-rule {
+            width: 30mm;
+            height: 4px;
+            margin: 9px 0 15px;
+            background: #2563eb;
+        }
+
+        .meta {
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 1px solid #cbd5e1;
+            color: #526174;
+        }
+
+        .meta p {
+            margin: 4px 0;
+        }
+
+        .callout {
+            margin: 11px 0;
+            padding: 10px 12px;
+            border-left: 4px solid #2563eb;
+            background: #eff6ff;
+            page-break-inside: avoid;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+            margin: 11px 0 15px;
+        }
+
+        .card {
+            padding: 11px;
+            border: 1px solid #dbe3ec;
+            border-radius: 4px;
+            page-break-inside: avoid;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #1d4ed8;
+        }
+
+        .card p {
+            margin-bottom: 0;
+        }
+
+        .stack {
+            padding: 10px 12px;
+            border: 1px solid #dbe3ec;
+            background: #f8fafc;
+        }
+
+        .stack span {
+            display: inline-block;
+            margin: 3px 4px 3px 0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: #eaf0f8;
+            color: #102a43;
+            font-size: 8.5pt;
+        }
+
+        table {
+            width: 100%;
+            margin: 8px 0 13px;
+            border-collapse: collapse;
+            font-size: 8.3pt;
+        }
+
+        th, td {
+            padding: 6px 7px;
+            border: 1px solid #cbd5e1;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: #102a43;
+            background: #eaf0f8;
+        }
+
+        code {
+            padding: 1px 3px;
+            background: #f1f5f9;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 8.5pt;
+        }
+
+        .small {
+            color: #526174;
+            font-size: 8pt;
+        }
+
+        .section-break {
+            page-break-before: always;
+        }
+
+        a {
+            color: #1d4ed8;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <section class="cover">
+        <p class="eyebrow">Project Portfolio | Education Technology</p>
+        <h1>Student Management<br>System</h1>
+        <div class="cover-rule"></div>
+        <p class="subtitle">A role-based academic administration application for student records, course catalogs, subject selection, enrollment review, and student self-service.</p>
+        <div class="meta">
+            <p><strong>Project type:</strong> Full-stack web application with authenticated JSON API</p>
+            <p><strong>Framework:</strong> Laravel 12 · PHP 8.2+</p>
+            <p><strong>Portfolio focus:</strong> Product capabilities, implementation highlights, and technical design</p>
+        </div>
+    </section>
+
+    <h2>Project at a glance</h2>
+    <p>The Student Management System brings core academic administration into one application. Administrators and staff maintain academic records and process enrollment requests. Students can maintain their linked profile, choose eligible subjects, and follow the status of their academic enrollments.</p>
+    <div class="grid">
+        <div class="card">
+            <h3>Academic records</h3>
+            <p>Manage students, courses, year levels, subjects, school-year enrollments, and subject assignments.</p>
+        </div>
+        <div class="card">
+            <h3>Role-based experiences</h3>
+            <p>Separate staff/admin management from student self-service, with active-account and role checks.</p>
+        </div>
+        <div class="card">
+            <h3>Enrollment workflow</h3>
+            <p>Collect course and subject choices, prevent duplicate requests, approve requests, and preserve cancellation history.</p>
+        </div>
+        <div class="card">
+            <h3>Operational visibility</h3>
+            <p>Explore date- and status-filtered metrics, monthly activity charts, course counts, and recent requests.</p>
+        </div>
+    </div>
+
+    <h2>Problem and solution</h2>
+    <p>Academic records connect students to programs, year levels, subjects, and enrollment periods. Keeping these records consistent while supporting both administrative workflows and student access requires clear relationships and permissions.</p>
+    <div class="callout">
+        <strong>Solution:</strong> A Laravel application with normalized enrollment records, explicit course/year-level subject eligibility, validated CRUD operations, transactional enrollment updates, and distinct role-gated web/API surfaces.
+    </div>
+
+    <h2>Who uses the system</h2>
+    <table>
+        <thead><tr><th>Role</th><th>Capabilities</th></tr></thead>
+        <tbody>
+            <tr><td>Administrator</td><td>Manage users and access; maintain academic records; review and approve enrollment requests; view dashboard reports.</td></tr>
+            <tr><td>Staff</td><td>Manage academic records and enrollments; view the staff dashboard. User administration is reserved for admins.</td></tr>
+            <tr><td>Student</td><td>Maintain their own profile, view their academic history, select eligible subjects, submit requests, and cancel pending requests.</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Feature highlights</h2>
+    <h3>Academic catalog and student records</h3>
+    <ul>
+        <li>Create, search, update, and maintain student profiles, courses, year levels, and subjects.</li>
+        <li>Associate subjects with a course and year level, including units and an active/inactive state.</li>
+        <li>Protect referenced records from inappropriate deletion; use deactivation where academic history must remain.</li>
+    </ul>
+    <h3>Enrollment from request to decision</h3>
+    <ul>
+        <li>Group student enrollment by course, year level, and school year.</li>
+        <li>Assign multiple subjects to one enrollment and enforce eligibility against the selected course and year level.</li>
+        <li>Track pending, approved, and cancelled workflows; record approver and approval time.</li>
+        <li>Update enrollment and related subject rows within database transactions.</li>
+    </ul>
+    <h3>Student portal and profiles</h3>
+    <ul>
+        <li>Link a login account to one student profile and restrict portal history to the signed-in student's records.</li>
+        <li>Support profile updates and optional validated profile photo upload/removal.</li>
+        <li>Retain cancelled request history rather than deleting enrollment records.</li>
+    </ul>
+
+    <h2 class="section-break">Reports and data visibility</h2>
+    <p>The staff dashboard summarizes enrollment activity from the normalized student-enrollment data. Filters cover calendar year, month, and enrollment status.</p>
+    <table>
+        <thead><tr><th>Dashboard section</th><th>Information presented</th></tr></thead>
+        <tbody>
+            <tr><td>Summary cards</td><td>Users, students, courses, period enrollments, pending and approved requests, students without enrollments, and subjects.</td></tr>
+            <tr><td>Activity charts</td><td>Monthly enrollments by enrollment date, status distribution, monthly request creation activity, and enrollment distribution by course.</td></tr>
+            <tr><td>Course summary</td><td>Course names, codes, and counts matching the selected filters.</td></tr>
+            <tr><td>Recent activity</td><td>Up to eight recent matching enrollment records, with student, course, subjects, date, and status.</td></tr>
+        </tbody>
+    </table>
+    <p class="small">The current dashboard is an interactive web report. It does not expose a report export/download endpoint.</p>
+
+    <h2>API capability</h2>
+    <p>A JSON student-resource API supports list, create, retrieve, update, and delete. Requests are authenticated with Sanctum bearer tokens and restricted to active administrator/staff accounts. Student responses use a resource representation with related course and year-level data.</p>
+    <table>
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td>GET</td><td><code>/api/students</code></td><td>Paginated student list.</td></tr>
+            <tr><td>POST</td><td><code>/api/students</code></td><td>Create student.</td></tr>
+            <tr><td>GET</td><td><code>/api/students/{student}</code></td><td>Retrieve student.</td></tr>
+            <tr><td>PUT/PATCH</td><td><code>/api/students/{student}</code></td><td>Update student.</td></tr>
+            <tr><td>DELETE</td><td><code>/api/students/{student}</code></td><td>Delete student.</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Technical implementation</h2>
+    <div class="stack">
+        <span>Laravel 12</span><span>PHP 8.2+</span><span>Eloquent ORM</span><span>Blade</span><span>Laravel Sanctum</span><span>Vite</span><span>SQLite / MySQL-compatible</span><span>Pest</span>
+    </div>
+    <ul>
+        <li><strong>Application:</strong> Laravel controllers and resource routes for web CRUD, student self-service, and authentication.</li>
+        <li><strong>Data:</strong> Migrations define foreign keys, uniqueness, indexes, and normalized student/subject enrollment tables.</li>
+        <li><strong>Authorization:</strong> Route middleware requires authenticated users with permitted roles and active accounts.</li>
+        <li><strong>Validation:</strong> Requests validate unique identifiers, related records, status choices, dates, subject eligibility, and uploaded image type/size.</li>
+        <li><strong>API:</strong> Sanctum authentication and a dedicated StudentResource control access and JSON shape.</li>
+        <li><strong>UI:</strong> Blade views with responsive layouts and dashboard charts.</li>
+    </ul>
+
+    <h2>Quality and verification</h2>
+    <p>Feature tests cover enrollment workflows, student portal scoping, API CRUD/authentication, dashboard metrics, profile operations, and role access. In the reviewed isolated SQLite run, 54 tests passed and one enrollment test failed on a date-format assertion: it expected a date-only value while SQLite returned the same date with a midnight time component. This is a test portability issue, not evidence that the enrollment update failed.</p>
+    <p>Security review of the inspected routes, authorization, validation, query construction, API resource, and view output found no confirmed high-confidence vulnerabilities. Source review is not a substitute for deployment configuration review or penetration testing.</p>
+
+    <h2>Run locally</h2>
+    <p>Typical local setup requires PHP, Composer, Node.js/npm, application environment configuration, migrations, and built frontend assets.</p>
+    <pre>composer install
+php artisan key:generate
+npm install
+php artisan migrate --seed
+npm run build
+php artisan serve</pre>
+    <p class="small">Configure <code>.env</code> and database settings for the intended environment. Tests should use a dedicated disposable test database.</p>
+
+    <h2>Project documentation</h2>
+    <ul>
+        <li><code>DATABASE_SCHEMA.pdf</code> — tables, migrations, and relationships.</li>
+        <li><code>LARAVEL_CONTROLLERS_CRUD_ROUTES.pdf</code> — route and controller behavior.</li>
+        <li><code>API_DOCUMENTATION.pdf</code> — JSON API endpoint reference.</li>
+        <li><code>REPORTS_DOCUMENTATION.pdf</code> — dashboard metrics and filters.</li>
+        <li><code>BUG_VALIDATION_SECURITY_REVIEW.pdf</code> — test, validation, and source review.</li>
+    </ul>
+    <p class="small">Prepared as a portfolio overview of the Student Management System project. It describes the checked-in application and does not claim individual authorship or credentials.</p>
+</body>
+</html>

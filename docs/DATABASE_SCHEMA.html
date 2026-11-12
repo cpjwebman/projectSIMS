@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SMS Database Schema, Migrations and Relationships</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 18mm 16mm 18mm;
+        }
+
+        :root {
+            color: #172033;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.45;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        h1, h2, h3 {
+            color: #102a43;
+            page-break-after: avoid;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 28pt;
+            line-height: 1.15;
+        }
+
+        h2 {
+            margin: 25px 0 9px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 17pt;
+        }
+
+        h3 {
+            margin: 17px 0 6px;
+            font-size: 12pt;
+        }
+
+        p {
+            margin: 6px 0 10px;
+        }
+
+        ul, ol {
+            margin: 5px 0 11px;
+            padding-left: 22px;
+        }
+
+        li {
+            margin: 3px 0;
+        }
+
+        .cover {
+            min-height: 235mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+        }
+
+        .eyebrow {
+            margin-bottom: 13px;
+            color: #2563eb;
+            font-size: 10pt;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            max-width: 135mm;
+            color: #526174;
+            font-size: 14pt;
+        }
+
+        .meta {
+            margin-top: 30px;
+            padding-top: 12px;
+            border-top: 2px solid #2563eb;
+            color: #526174;
+        }
+
+        .callout {
+            margin: 12px 0;
+            padding: 10px 12px;
+            border-left: 4px solid #2563eb;
+            background: #eff6ff;
+            page-break-inside: avoid;
+        }
+
+        .warning {
+            border-left-color: #d97706;
+            background: #fffbeb;
+        }
+
+        table {
+            width: 100%;
+            margin: 8px 0 14px;
+            border-collapse: collapse;
+            font-size: 8.6pt;
+            page-break-inside: auto;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tr {
+            page-break-inside: avoid;
+        }
+
+        th, td {
+            padding: 6px 7px;
+            border: 1px solid #cbd5e1;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: #102a43;
+            background: #eaf0f8;
+        }
+
+        code, pre {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 8.5pt;
+        }
+
+        code {
+            padding: 1px 3px;
+            background: #f1f5f9;
+        }
+
+        pre {
+            padding: 10px;
+            border: 1px solid #dbe3ec;
+            background: #f8fafc;
+            white-space: pre-wrap;
+            page-break-inside: avoid;
+        }
+
+        .diagram {
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            background: #f8fafc;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 8.5pt;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            page-break-inside: avoid;
+        }
+
+        .small {
+            color: #526174;
+            font-size: 8.5pt;
+        }
+
+        .section-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <section class="cover">
+        <div class="eyebrow">SMS | Database Engineering</div>
+        <h1>Database Schema,<br>Migrations &amp; Relationships</h1>
+        <p class="subtitle">A practical reference to the student management system's persisted data model, migration history, and Eloquent associations.</p>
+        <div class="meta">
+            <p><strong>Source of truth:</strong> Laravel migrations and Eloquent models in this project.</p>
+            <p><strong>Verification:</strong> Every migration currently in the project reported as applied by <code>php artisan migrate:status</code>.</p>
+            <p><strong>Scope:</strong> Core academic data, authentication, and Laravel infrastructure tables.</p>
+        </div>
+    </section>
+
+    <h2>1. Executive overview</h2>
+    <p>The schema supports student profiles, courses, year levels, subjects, academic-period enrollment, subject selection, and enrollment approval. The newer design separates a student's enrollment in a course and school year from the individual subjects selected for that enrollment.</p>
+    <div class="callout warning">
+        <strong>Important transition note:</strong> The migration history creates and evolves the legacy <code>enrollments</code> table, then migration <code>2026_11_07_000014</code> creates <code>student_enrollments</code> and <code>subject_enrollments</code> and copies legacy data into them. That migration does not drop the legacy table. Treat the two new tables as the normalized enrollment design; the old table remains in the database for compatibility/history unless a later migration retires it.
+    </div>
+
+    <h2>2. Conceptual relationship map</h2>
+    <div class="diagram">users 1 --- 0..1 students
+students 1 --- many student_enrollments many --- 1 courses
+year_levels 1 --- many student_enrollments
+student_enrollments 1 --- many subject_enrollments many --- 1 subjects
+courses 1 --- many subjects
+year_levels 1 --- many subjects
+users 1 --- many approvals (approved_by)
+
+Legacy compatibility:
+students 1 --- many enrollments many --- 1 courses
+courses/year_levels/subjects/users link to enrollments where applicable
+
+Independent/supporting data:
+blogs | personal_access_tokens | cache/cache_locks | jobs/job_batches/failed_jobs
+sessions | password_reset_tokens</div>
+    <p class="small">The map summarizes cardinality and foreign-key direction. Several profile/reference foreign keys are nullable; their delete behavior is detailed in the table definitions below.</p>
+
+    <h2>3. Core schema reference</h2>
+    <h3>users</h3>
+    <table>
+        <thead><tr><th>Column</th><th>Definition</th><th>Purpose / constraints</th></tr></thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>Primary key</td><td>Laravel user identifier.</td></tr>
+            <tr><td><code>name</code>, <code>email</code>, <code>password</code></td><td>Required strings</td><td>Email is unique; password is stored hashed by the model.</td></tr>
+            <tr><td><code>email_verified_at</code></td><td>Nullable timestamp</td><td>Email verification state.</td></tr>
+            <tr><td><code>role</code></td><td>String, default <code>staff</code></td><td>Application role; model constants include admin, staff, and student.</td></tr>
+            <tr><td><code>is_active</code></td><td>Boolean, default true</td><td>Account activation flag.</td></tr>
+            <tr><td><code>profile_photo_path</code></td><td>Nullable string</td><td>Optional profile photo location.</td></tr>
+            <tr><td><code>remember_token</code>, timestamps</td><td>Laravel defaults</td><td>Remember-me authentication and record dates.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>students</h3>
+    <table>
+        <thead><tr><th>Column</th><th>Definition</th><th>Purpose / constraints</th></tr></thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>Primary key</td><td>Student identifier.</td></tr>
+            <tr><td><code>student_number</code></td><td>Required unique string</td><td>Institutional student number.</td></tr>
+            <tr><td><code>first_name</code>, <code>last_name</code></td><td>Required strings</td><td>Student name.</td></tr>
+            <tr><td><code>email</code>, <code>phone</code>, <code>date_of_birth</code>, <code>address</code></td><td>Nullable; phone max 30; date stored as date; address text</td><td>Optional contact/profile data.</td></tr>
+            <tr><td><code>user_id</code></td><td>Nullable unique FK to <code>users.id</code></td><td>Optional one-to-one login account; set null when user is deleted.</td></tr>
+            <tr><td><code>course_id</code>, <code>year_level_id</code></td><td>Nullable FKs to <code>courses.id</code> and <code>year_levels.id</code></td><td>Current profile placement; set null when referenced record is deleted.</td></tr>
+            <tr><td>timestamps</td><td>Created/updated timestamps</td><td>Laravel record tracking.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>courses and year_levels</h3>
+    <table>
+        <thead><tr><th>Table</th><th>Columns</th><th>Constraints / notes</th></tr></thead>
+        <tbody>
+            <tr><td><code>courses</code></td><td><code>id</code>, <code>course_code</code>, <code>name</code>, nullable <code>description</code>, <code>status</code>, timestamps</td><td><code>course_code</code> is unique; status defaults to <code>active</code>.</td></tr>
+            <tr><td><code>year_levels</code></td><td><code>id</code>, <code>year_level</code>, nullable <code>name</code>, <code>status</code>, timestamps</td><td><code>year_level</code> is a unique unsigned tiny integer; status defaults to <code>active</code>.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>subjects</h3>
+    <table>
+        <thead><tr><th>Column</th><th>Definition</th><th>Purpose / constraints</th></tr></thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>Primary key</td><td>Subject identifier.</td></tr>
+            <tr><td><code>subject_code</code></td><td>Required unique string</td><td>Institutional subject code.</td></tr>
+            <tr><td><code>name</code>, nullable <code>description</code></td><td>String and text</td><td>Subject title and optional detail.</td></tr>
+            <tr><td><code>units</code></td><td>Unsigned tiny integer, default 1</td><td>Credit/unit value.</td></tr>
+            <tr><td><code>course_id</code>, <code>year_level_id</code></td><td>Nullable FKs to courses/year levels</td><td>Both use restrict-on-delete; referenced records cannot be deleted while linked.</td></tr>
+            <tr><td><code>status</code></td><td>String, default <code>active</code></td><td>Subject availability.</td></tr>
+            <tr><td>Composite index</td><td><code>(course_id, year_level_id, status)</code></td><td>Supports filtering subjects by placement and status.</td></tr>
+        </tbody>
+    </table>
+
+    <h3 class="section-break">student_enrollments</h3>
+    <p>This is the normalized record for a student's enrollment in a course during a school year.</p>
+    <table>
+        <thead><tr><th>Column</th><th>Definition</th><th>Purpose / constraints</th></tr></thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>Primary key</td><td>Enrollment identifier.</td></tr>
+            <tr><td><code>student_id</code>, <code>course_id</code></td><td>Required FKs</td><td>Restrict deletion of a linked student or course.</td></tr>
+            <tr><td><code>year_level_id</code></td><td>Nullable FK</td><td>Restrict deletion while linked; nullable for records without a year-level assignment.</td></tr>
+            <tr><td><code>school_year</code></td><td>String, length 9</td><td>Academic period label (for example, <code>2026-2027</code>).</td></tr>
+            <tr><td><code>enrollment_date</code></td><td>Date</td><td>Date of enrollment.</td></tr>
+            <tr><td><code>status</code></td><td>String, default <code>pending</code></td><td>Enrollment workflow state.</td></tr>
+            <tr><td><code>approved_by</code></td><td>Nullable FK to <code>users.id</code></td><td>Approver account; set null when that user is deleted.</td></tr>
+            <tr><td><code>approved_at</code></td><td>Nullable timestamp</td><td>Approval time.</td></tr>
+            <tr><td>Unique constraint</td><td>Student + course + year level + school year</td><td>Prevents duplicate enrollment for the same placement and period (subject to database handling of nullable unique values).</td></tr>
+            <tr><td>Index</td><td><code>(school_year, status)</code></td><td>Supports period/status queries.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>subject_enrollments</h3>
+    <table>
+        <thead><tr><th>Column</th><th>Definition</th><th>Purpose / constraints</th></tr></thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>Primary key</td><td>Subject assignment identifier.</td></tr>
+            <tr><td><code>student_enrollment_id</code></td><td>Required FK to <code>student_enrollments.id</code></td><td>Restrict-on-delete.</td></tr>
+            <tr><td><code>subject_id</code></td><td>Required FK to <code>subjects.id</code></td><td>Restrict-on-delete.</td></tr>
+            <tr><td><code>status</code></td><td>String, default <code>pending</code></td><td>Status of this subject assignment.</td></tr>
+            <tr><td>Unique constraint</td><td><code>(student_enrollment_id, subject_id)</code></td><td>A subject may be assigned only once per student enrollment.</td></tr>
+            <tr><td>Index</td><td><code>(subject_id, status)</code></td><td>Supports subject/status lookups.</td></tr>
+            <tr><td>timestamps</td><td>Created/updated timestamps</td><td>Laravel record tracking.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Legacy enrollments table</h3>
+    <p>The table was introduced before the normalized design and remains present after migration 014. It represents a combined student/course/subject enrollment row.</p>
+    <table>
+        <thead><tr><th>Column / constraint</th><th>Current definition from migration history</th></tr></thead>
+        <tbody>
+            <tr><td>Keys</td><td><code>student_id</code> and <code>course_id</code> are required FKs with cascade-on-delete; <code>year_level_id</code> and <code>subject_id</code> are nullable FKs with null-on-delete; <code>approved_by</code> is a nullable user FK with null-on-delete.</td></tr>
+            <tr><td>Enrollment details</td><td><code>enrolled_at</code> date, <code>status</code> string defaulting to pending, nullable <code>approved_at</code>, and timestamps.</td></tr>
+            <tr><td>Uniqueness</td><td>Migration history replaces unique <code>(student_id, course_id)</code> with unique <code>(student_id, course_id, subject_id)</code>.</td></tr>
+            <tr><td>Migration status</td><td>Migration 014 copies rows to the normalized tables; it does not remove this source table.</td></tr>
+        </tbody>
+    </table>
+
+    <h2>4. Eloquent relationships</h2>
+    <table>
+        <thead><tr><th>Model</th><th>Relationship methods</th><th>Meaning</th></tr></thead>
+        <tbody>
+            <tr><td><code>User</code></td><td><code>student()</code>: hasOne Student</td><td>A login can be associated with at most one student profile through unique <code>students.user_id</code>.</td></tr>
+            <tr><td><code>Student</code></td><td><code>user()</code>, <code>course()</code>, <code>yearLevel()</code>: belongsTo; <code>enrollments()</code>, <code>studentEnrollments()</code>: hasMany</td><td>Profile placement and both legacy and normalized enrollment histories.</td></tr>
+            <tr><td><code>Course</code></td><td><code>students()</code>, <code>subjects()</code>, <code>enrollments()</code>, <code>studentEnrollments()</code>: hasMany</td><td>A course groups student profiles, subjects, and enrollment records.</td></tr>
+            <tr><td><code>YearLevel</code></td><td><code>students()</code>, <code>subjects()</code>, <code>enrollments()</code>, <code>studentEnrollments()</code>: hasMany</td><td>A year level can be used on student profiles, subjects, and enrollment records.</td></tr>
+            <tr><td><code>Subject</code></td><td><code>course()</code>, <code>yearLevel()</code>: belongsTo; <code>enrollments()</code>, <code>subjectEnrollments()</code>: hasMany</td><td>Subject catalog placement and assignment records.</td></tr>
+            <tr><td><code>StudentEnrollment</code></td><td><code>student()</code>, <code>course()</code>, <code>yearLevel()</code>, <code>approver()</code>: belongsTo; <code>subjectEnrollments()</code>: hasMany; <code>subjects()</code>: belongsToMany</td><td>Normalized academic-period enrollment and its subject selections. The many-to-many relation uses the <code>subject_enrollments</code> pivot and includes pivot status and timestamps.</td></tr>
+            <tr><td><code>SubjectEnrollment</code></td><td><code>studentEnrollment()</code>, <code>subject()</code>: belongsTo</td><td>Explicit pivot model for a student's subject assignment.</td></tr>
+            <tr><td><code>Enrollment</code></td><td><code>student()</code>, <code>course()</code>, <code>subject()</code>, <code>yearLevel()</code>, <code>approver()</code>: belongsTo</td><td>Legacy combined enrollment records.</td></tr>
+        </tbody>
+    </table>
+    <p class="small">Relationship methods describe application navigation; database foreign keys and unique indexes enforce persistence rules. Not every inverse relationship (such as a user's list of approvals) is currently declared as a model method.</p>
+
+    <h2>5. Migration history</h2>
+    <table>
+        <thead><tr><th>Migration(s)</th><th>Schema change</th></tr></thead>
+        <tbody>
+            <tr><td><code>0001_01_01_000000_create_users_table</code></td><td>Creates users, password reset tokens, and database-backed sessions.</td></tr>
+            <tr><td><code>0001_01_01_000001_create_cache_table</code></td><td>Creates cache and cache lock tables.</td></tr>
+            <tr><td><code>0001_01_01_000002_create_jobs_table</code></td><td>Creates jobs, job batches, and failed jobs.</td></tr>
+            <tr><td><code>2026_10_30_010724_create_students_table</code></td><td>Creates the base student profile and unique student number.</td></tr>
+            <tr><td><code>2026_10_30_024054_create_personal_access_tokens_table</code></td><td>Creates polymorphic Sanctum API tokens.</td></tr>
+            <tr><td><code>2026_10_30_024811_create_blogs_table</code></td><td>Creates standalone blog title/body records.</td></tr>
+            <tr><td><code>2026_11_04_000000_create_subjects_table</code><br><code>2026_11_04_000001_create_courses_table</code></td><td>Creates the initial subject and course catalogs.</td></tr>
+            <tr><td><code>2026_11_04_000002_create_enrollments_table</code></td><td>Creates legacy student/course enrollment with a unique student/course pair.</td></tr>
+            <tr><td><code>2026_11_04_000003</code> and <code>000004</code></td><td>Temporarily adds then removes the integer year-level field from legacy enrollments.</td></tr>
+            <tr><td><code>2026_11_04_000005</code> through <code>000007</code></td><td>Creates year levels, adds an optional display name, and links legacy enrollments to year levels.</td></tr>
+            <tr><td><code>2026_11_04_000008</code> and <code>000009</code></td><td>Adds user role/active state and student profile fields/optional user, course, and year-level links.</td></tr>
+            <tr><td><code>2026_11_04_000010</code> through <code>000012</code></td><td>Adds subject units, optional subject on legacy enrollments and revised uniqueness, plus approval status and approver fields.</td></tr>
+            <tr><td><code>2026_11_05_000013</code></td><td>Adds optional user profile photo path.</td></tr>
+            <tr><td><code>2026_11_07_000014_normalize_student_enrollments_and_subject_assignments</code></td><td>Adds active status to courses/year levels/subjects, course and year-level placement to subjects, creates normalized enrollment tables, and backfills legacy enrollment rows.</td></tr>
+        </tbody>
+    </table>
+    <div class="callout">
+        <strong>Backfill behavior in migration 014:</strong> It derives the new school year from the legacy <code>enrolled_at</code> year, uses the legacy year level or falls back to the student's profile year level, groups compatible rows into a student enrollment, and creates a subject assignment when the legacy row contains a subject.
+    </div>
+
+    <h2>6. Supporting and framework tables</h2>
+    <table>
+        <thead><tr><th>Table(s)</th><th>Purpose and notable structure</th></tr></thead>
+        <tbody>
+            <tr><td><code>password_reset_tokens</code></td><td>Framework password reset token keyed by email.</td></tr>
+            <tr><td><code>sessions</code></td><td>Database session records; indexed user ID and last activity. The migration does not declare a user foreign key.</td></tr>
+            <tr><td><code>personal_access_tokens</code></td><td>Sanctum polymorphic token records with unique token hash and optional expiration.</td></tr>
+            <tr><td><code>cache</code>, <code>cache_locks</code></td><td>Database cache values and lock ownership/expiration.</td></tr>
+            <tr><td><code>jobs</code>, <code>job_batches</code>, <code>failed_jobs</code></td><td>Queue payloads, batch tracking, and failed job details.</td></tr>
+            <tr><td><code>blogs</code></td><td>Standalone records with title, body, and timestamps; no relationships are declared in the inspected model set.</td></tr>
+        </tbody>
+    </table>
+
+    <h2>7. Schema design notes and operations</h2>
+    <ul>
+        <li><strong>Normalization:</strong> Keep a student profile separate from each academic-period enrollment. Keep subject selection in its own pivot table so a single period enrollment can include multiple subjects.</li>
+        <li><strong>Referential integrity:</strong> Use the declared foreign keys. Profile links and approver links are nullable and preserve dependent records when the referenced user/profile placement is deleted; normalized academic records use restrictive deletes to avoid accidental loss.</li>
+        <li><strong>Duplicate prevention:</strong> Unique student number, course code, subject code, student/user profile link, period enrollment tuple, and subject-enrollment pair constraints protect key identities.</li>
+        <li><strong>Legacy transition:</strong> The older <code>enrollments</code> table still exists and the legacy Eloquent model remains. Applications should consistently use the normalized path for new enrollment workflows unless intentionally supporting legacy behavior.</li>
+        <li><strong>Rollback planning:</strong> Migration 014's down method drops the normalized tables and the new catalog columns; it does not reverse the backfilled rows into <code>enrollments</code>. Take a backup and validate data before rolling it back in a populated environment.</li>
+    </ul>
+
+    <h3>Useful commands</h3>
+    <pre>php artisan migrate:status
+php artisan migrate
+php artisan migrate:rollback --step=1</pre>
+    <p class="small">Run migrations against the intended environment and review rollback/data-loss implications before applying in production.</p>
+
+    <h2>8. Source files</h2>
+    <p>This reference was compiled from <code>database/migrations</code> and <code>app/Models</code>, including the normalization migration and its data-copy logic. Migration status was checked against the configured application database during document generation.</p>
+</body>
+</html>

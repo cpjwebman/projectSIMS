@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Multi-Agent Workflow and Specialized Agents</title>
+    <style>
+        @page { size: A4; margin: 16mm 15mm 17mm; }
+        :root { color: #172033; font: 9.2pt/1.43 "Segoe UI", Arial, sans-serif; }
+        body { margin: 0; }
+        h1, h2, h3 { color: #102a43; page-break-after: avoid; }
+        h1 { margin: 0 0 10px; font-size: 27pt; line-height: 1.12; }
+        h2 { margin: 21px 0 8px; padding-bottom: 5px; border-bottom: 1px solid #cbd5e1; font-size: 15pt; }
+        h3 { margin: 13px 0 5px; font-size: 10.5pt; }
+        p { margin: 5px 0 8px; }
+        ul, ol { margin: 4px 0 9px; padding-left: 20px; }
+        li { margin: 2px 0; }
+        code, pre { font-family: Consolas, "Courier New", monospace; font-size: 8pt; }
+        code { padding: 1px 3px; background: #f1f5f9; }
+        pre { padding: 9px; border: 1px solid #dbe3ec; background: #f8fafc; white-space: pre-wrap; page-break-inside: avoid; }
+        table { width: 100%; margin: 7px 0 11px; border-collapse: collapse; font-size: 7.7pt; page-break-inside: auto; }
+        thead { display: table-header-group; }
+        tr { page-break-inside: avoid; }
+        th, td { padding: 5px 6px; border: 1px solid #cbd5e1; text-align: left; vertical-align: top; }
+        th { color: #102a43; background: #eaf0f8; }
+        .cover { min-height: 237mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+        .eyebrow { color: #2563eb; font-size: 9pt; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+        .subtitle { max-width: 137mm; color: #526174; font-size: 13pt; }
+        .meta { margin-top: 24px; padding-top: 11px; border-top: 2px solid #2563eb; color: #526174; }
+        .callout { margin: 9px 0; padding: 8px 10px; border-left: 4px solid #2563eb; background: #eff6ff; page-break-inside: avoid; }
+        .warning { border-left-color: #d97706; background: #fffbeb; }
+        .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 5px; margin: 10px 0 12px; }
+        .step { flex: 1 1 24%; min-width: 30mm; padding: 7px; border: 1px solid #cbd5e1; background: #f8fafc; text-align: center; }
+        .arrow { align-self: center; color: #2563eb; font-weight: bold; }
+        .small { color: #526174; font-size: 7.7pt; }
+        .section-break { page-break-before: always; }
+    </style>
+</head>
+<body>
+    <section class="cover">
+        <p class="eyebrow">Engineering Playbook | Agent Collaboration</p>
+        <h1>Multi-Agent Workflow<br>&amp; Specialized Agents</h1>
+        <p class="subtitle">A practical, review-gated collaboration model demonstrated with the Student Management System enrollment workflow.</p>
+        <div class="meta">
+            <p><strong>Example system:</strong> Laravel 12 student management application</p>
+            <p><strong>Demonstration:</strong> Student enrollment request through staff approval</p>
+            <p><strong>Goal:</strong> Parallelize independent work while keeping implementation, tests, and decisions coordinated</p>
+        </div>
+    </section>
+
+    <h2>1. What “multi-agent” means here</h2>
+    <p>A multi-agent workflow assigns bounded engineering responsibilities to specialized AI agents. Each agent receives a defined objective, relevant project context, expected output, and a stop condition. A human or lead agent coordinates dependencies, integrates changes, and makes final acceptance decisions.</p>
+    <div class="callout warning"><strong>Important:</strong> This document describes a workflow and demonstrates how specialized agents can collaborate. It does not claim that a multi-agent runtime, orchestration service, or autonomous agent system is installed in this Laravel application.</div>
+
+    <h2>2. Workflow at a glance</h2>
+    <div class="flow">
+        <div class="step"><strong>1. Scope</strong><br>Requirements agent</div><div class="arrow">→</div>
+        <div class="step"><strong>2. Design</strong><br>Data + API contracts</div><div class="arrow">→</div>
+        <div class="step"><strong>3. Implement</strong><br>Backend + UI in parallel</div><div class="arrow">→</div>
+        <div class="step"><strong>4. Verify</strong><br>QA + security review</div><div class="arrow">→</div>
+        <div class="step"><strong>5. Integrate</strong><br>Lead review + docs</div>
+    </div>
+    <p>Each gate checks the output needed by the next stage. Parallel work is used only after interfaces and ownership are clear; dependent implementation is not started on conflicting assumptions.</p>
+
+    <h2>3. Specialized agent roles</h2>
+    <table>
+        <thead><tr><th>Agent</th><th>Bounded responsibility</th><th>Expected handoff</th><th>Stop condition</th></tr></thead>
+        <tbody>
+            <tr><td>Lead / orchestrator</td><td>Clarify scope, split tasks, identify dependencies, assign file ownership, resolve conflicts, integrate and accept results.</td><td>Task map, agreed contracts, integration decision, final summary.</td><td>All required work is integrated, verified, and reported—or a blocker is explicit.</td></tr>
+            <tr><td>Requirements analyst</td><td>Turn the request into user flows, rules, acceptance criteria, and exclusions. Ask about ambiguous behavior.</td><td>Short requirements checklist and measurable acceptance criteria.</td><td>Each requested behavior has a testable expected outcome.</td></tr>
+            <tr><td>Data / schema specialist</td><td>Inspect existing migrations/models; design required fields, keys, constraints, and backfill/rollback concerns.</td><td>Schema proposal with relationships and migration risks.</td><td>Design is compatible with current data and is approved before schema edits.</td></tr>
+            <tr><td>Laravel backend specialist</td><td>Implement controller/service, validation, authorization, transactions, and route wiring for the agreed contract.</td><td>Focused code changes and notes on invariants and error behavior.</td><td>Code matches the contract and focused tests pass.</td></tr>
+            <tr><td>UI specialist</td><td>Implement the form, loading/errors/success states, accessibility, and responsive presentation against the agreed request/response contract.</td><td>View/assets changes and a clear interaction summary.</td><td>UI consumes the agreed fields; form and feedback paths are covered.</td></tr>
+            <tr><td>QA / test specialist</td><td>Map acceptance criteria to feature tests; verify success, validation, authorization, concurrency-sensitive behavior, and regressions.</td><td>Runnable test results with failures and reproduction details.</td><td>Every acceptance criterion has evidence or a documented gap.</td></tr>
+            <tr><td>Security reviewer</td><td>Read-only review of the diff and relevant call paths for authorization, ownership, validation, injection, data exposure, and unsafe actions.</td><td>Ranked, evidence-based findings with exact locations—or an explicit no-findings result.</td><td>Review scope is complete; findings are not fixed implicitly without authorization.</td></tr>
+            <tr><td>Documentation specialist</td><td>Document user/API behavior, setup or operational changes, and limitations that are verified in code.</td><td>Updated source documentation and generated deliverable, if requested.</td><td>Docs match shipped behavior and label assumptions accurately.</td></tr>
+        </tbody>
+    </table>
+
+    <h2>4. Coordination rules and gates</h2>
+    <ol>
+        <li><strong>One source of truth:</strong> The repository and approved task contract define behavior; agents do not invent schema, role policy, or route semantics independently.</li>
+        <li><strong>Bounded tasks:</strong> Each agent owns a concrete deliverable, files or subsystem, and acceptance/stop condition.</li>
+        <li><strong>Explicit dependencies:</strong> Schema/API contract precedes dependent backend/UI work. Independent review can proceed once the changed surface is stable.</li>
+        <li><strong>Clear file ownership:</strong> Avoid simultaneous edits to the same files. Share interfaces first; integrate sequentially when changes overlap.</li>
+        <li><strong>Review findings are evidence:</strong> Report source location, impact, confidence, and reproduction conditions. A reviewer does not silently alter behavior.</li>
+        <li><strong>Lead agent owns integration:</strong> Re-read combined changes, resolve contradictions, run the focused tests, and report incomplete checks.</li>
+        <li><strong>Protect data and credentials:</strong> Use an isolated test database, do not expose secrets, and do not apply migrations or destructive operations to a shared environment without approval.</li>
+    </ol>
+    <div class="callout"><strong>Gate A — Ready to implement:</strong> Acceptance criteria, data contract, route, authorization rule, and failure behavior are agreed.<br><strong>Gate B — Ready to merge:</strong> Focused tests pass, security findings are triaged, no unrelated changes are included, and documentation reflects actual behavior.</div>
+
+    <h2 class="section-break">5. Demonstration: enrollment request and approval</h2>
+    <p><strong>Example request:</strong> A student selects an active course and year level, chooses eligible subjects for a school year, submits an enrollment request, and an authorized staff member approves it.</p>
+    <h3>Step 1 — Requirements analyst defines the contract</h3>
+    <ul>
+        <li>Only the signed-in student's linked profile may create a self-service enrollment.</li>
+        <li>Course and year level must be active. At least one distinct subject must match both.</li>
+        <li>At most one enrollment is allowed per student/course/year-level/school-year tuple.</li>
+        <li>Submission creates a pending enrollment and pending subject assignments.</li>
+        <li>Only authorized staff/admin may approve a pending request; approval records approver/time and updates its subject assignments.</li>
+        <li>Only pending requests may be cancelled; cancellation preserves the record and history.</li>
+    </ul>
+    <h3>Step 2 — Data specialist maps the existing model</h3>
+    <p>Inspect the current schema before proposing new tables. The application already has <code>student_enrollments</code> and <code>subject_enrollments</code>, including a period uniqueness constraint and subject-assignment uniqueness. The data agent should flag nullable year-level uniqueness semantics and existing legacy <code>enrollments</code> migration history rather than introducing a duplicate design.</p>
+    <h3>Step 3 — Backend and UI specialists implement to one contract</h3>
+    <p>The backend uses the student portal routes and <code>StudentPortalController</code> for self-service, and the admin/staff enrollment resource plus approval route for review. The UI specialist can work in parallel on the student selection form and staff review states once endpoint fields and validation errors are agreed.</p>
+    <div class="flow">
+        <div class="step"><strong>Validate</strong><br>Active placement<br>eligible subjects</div><div class="arrow">→</div>
+        <div class="step"><strong>Persist atomically</strong><br>Enrollment + subject rows</div><div class="arrow">→</div>
+        <div class="step"><strong>Review</strong><br>Pending request</div><div class="arrow">→</div>
+        <div class="step"><strong>Decide</strong><br>Approve or cancel</div>
+    </div>
+    <h3>Step 4 — QA agent turns rules into evidence</h3>
+    <table>
+        <thead><tr><th>Scenario</th><th>Expected evidence</th></tr></thead>
+        <tbody>
+            <tr><td>Valid eligible subject selection</td><td>Redirect success; one pending student enrollment and expected pending subject rows.</td></tr>
+            <tr><td>Inactive or mismatched subject</td><td>Validation error; no partial enrollment or subject rows.</td></tr>
+            <tr><td>Duplicate period enrollment</td><td>Duplicate error; only one matching enrollment remains, including under competing requests where supported.</td></tr>
+            <tr><td>Student attempts another student's cancellation</td><td>Not found/denied; other student's record is unchanged.</td></tr>
+            <tr><td>Cancel or approve pending request</td><td>Parent and child statuses transition together; approver metadata is recorded on approval.</td></tr>
+            <tr><td>Edit/approve a non-pending request</td><td>Existing state is retained; request is rejected or reports it has already been reviewed.</td></tr>
+        </tbody>
+    </table>
+    <h3>Step 5 — Security reviewer checks boundaries</h3>
+    <p>Trace request user to student profile; confirm ownership is enforced server-side, role middleware covers staff approval, eligible subjects are queried against active placement, validation errors do not disclose unrelated records, and state updates remain transactional. Deliver a read-only finding list with evidence.</p>
+    <h3>Step 6 — Lead integrates, docs agent records behavior</h3>
+    <p>The lead inspects both parallel changes together, runs the enrollment and portal feature tests using a disposable database, resolves issues, and confirms no conflicting route or validation assumptions remain. Documentation records the real route names, statuses, validation, and any unimplemented behavior.</p>
+
+    <h2>6. Existing implementation used in this demonstration</h2>
+    <table>
+        <thead><tr><th>Concern</th><th>Existing implementation evidence</th></tr></thead>
+        <tbody>
+            <tr><td>Student submission</td><td><code>StudentPortalController@storeEnrollment</code> validates active course/year level, school-year format, distinct subjects, and matching active subject placement; writes in a transaction.</td></tr>
+            <tr><td>Duplicate/concurrent request handling</td><td>Application duplicate check, student row lock, and unique period constraint.</td></tr>
+            <tr><td>Staff review</td><td><code>EnrollmentController@approve</code> marks enrollment and subject assignments approved in a transaction, with approver/time fields.</td></tr>
+            <tr><td>Cancellation and ownership</td><td>Student cancellation scopes the record through the signed-in student's relationship and only permits pending records.</td></tr>
+            <tr><td>Feature tests</td><td><code>EnrollmentTest</code> and <code>StudentPortalTest</code> cover creation, eligibility, duplicate submission, approval, cancellation, and ownership cases.</td></tr>
+        </tbody>
+    </table>
+    <div class="callout warning">This walkthrough demonstrates how specialized agents would divide analysis and verification for a feature already represented in the project. It is not a claim that those agents performed the original implementation.</div>
+
+    <h2>7. Sample task briefs</h2>
+    <h3>Backend brief</h3>
+    <pre>Objective: implement only the agreed enrollment request contract.
+Inspect existing models/migrations before editing.
+Keep student ownership server-side; validate active and eligible subjects.
+Persist parent and subject rows transactionally.
+Add focused tests for success, invalid subject, and duplicate period.
+Do not change routes or schema outside the approved design.
+Stop when focused tests pass; report changed files and assumptions.</pre>
+    <h3>QA brief</h3>
+    <pre>Objective: verify the enrollment acceptance criteria against the implementation.
+Use an isolated test database only.
+Cover invalid/ineligible subjects, duplicate requests, ownership,
+pending-only cancellation/edit, and approval metadata.
+Do not modify application code; report exact test results and failures.</pre>
+    <h3>Security-review brief</h3>
+    <pre>Objective: read-only review of enrollment authorization and input boundaries.
+Trace routes, role middleware, ownership checks, validation, transactions,
+and data exposure. Report only confirmed/high-confidence findings with
+file and line evidence, impact, and confidence—or explicitly report none.
+Do not make code changes.</pre>
+
+    <h2>8. Success measures</h2>
+    <ul>
+        <li>Each acceptance criterion maps to an implementation and a test or a recorded limitation.</li>
+        <li>Parallel agents share one stable contract and do not overwrite each other's changes.</li>
+        <li>Authorization and ownership are verified at the server boundary, not only in the UI.</li>
+        <li>Test runs are isolated and repeatable; failures are reported rather than hidden.</li>
+        <li>Final documentation describes shipped behavior without overstating automation or review coverage.</li>
+    </ul>
+
+    <h2>9. Project references</h2>
+    <p>Workflow demonstration sources: <code>routes/web.php</code>, <code>app/Http/Controllers/StudentPortalController.php</code>, <code>app/Http/Controllers/EnrollmentController.php</code>, <code>app/Models/StudentEnrollment.php</code>, <code>database/migrations/2026_11_07_000014_normalize_student_enrollments_and_subject_assignments.php</code>, <code>tests/Feature/EnrollmentTest.php</code>, and <code>tests/Feature/StudentPortalTest.php</code>.</p>
+    <p class="small">This playbook is a process design. Adapt agent roles, permissions, and review requirements to the actual orchestration tools and repository workflow in use.</p>
+</body>
+</html>

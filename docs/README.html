@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Student Management System - README</title>
+    <style>
+        @page { size: A4; margin: 18mm 16mm; }
+        :root { color: #172033; font: 10pt/1.48 "Segoe UI", Arial, sans-serif; }
+        body { margin: 0; }
+        h1, h2, h3 { color: #102a43; page-break-after: avoid; }
+        h1 { font-size: 27pt; line-height: 1.15; }
+        h2 { margin-top: 21px; padding-bottom: 5px; border-bottom: 1px solid #cbd5e1; font-size: 16pt; }
+        h3 { margin-top: 15px; font-size: 11pt; }
+        p { margin: 6px 0 10px; }
+        li { margin: 3px 0; }
+        code, pre { font-family: Consolas, "Courier New", monospace; font-size: 8.5pt; }
+        code { padding: 1px 3px; background: #f1f5f9; }
+        pre { padding: 10px; border: 1px solid #dbe3ec; background: #f8fafc; white-space: pre-wrap; page-break-inside: avoid; }
+        .cover { min-height: 235mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+        .eyebrow { color: #2563eb; font-size: 9pt; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+        .subtitle { max-width: 135mm; color: #526174; font-size: 14pt; }
+        .meta { margin-top: 26px; padding-top: 12px; border-top: 2px solid #2563eb; color: #526174; }
+        .callout { margin: 10px 0; padding: 9px 11px; border-left: 4px solid #2563eb; background: #eff6ff; }
+        a { color: #1d4ed8; }
+    </style>
+</head>
+<body>
+    <section class="cover">
+        <p class="eyebrow">SMS | Project README</p>
+        <h1>Student Management<br>System</h1>
+        <p class="subtitle">Setup instructions, application features, user roles, and operational commands for the Laravel student management application.</p>
+        <div class="meta">
+            <p><strong>Framework:</strong> Laravel 12, PHP 8.2+</p>
+            <p><strong>Web:</strong> Role-based staff/admin tools and student portal</p>
+            <p><strong>API:</strong> Sanctum-protected student resource endpoints</p>
+        </div>
+    </section>
+    <h2>About</h2>
+    <p>The Student Management System manages student profiles, courses, year levels, subjects, school-year enrollments, and enrollment approval. Staff and administrators use the management dashboard; students manage their own profile and enrollment requests.</p>
+    <h2>Features</h2>
+    <ul>
+        <li>Admin/staff CRUD management for students, courses, year levels, subjects, and enrollments.</li>
+        <li>Student profile and enrollment self-service.</li>
+        <li>Approval and cancellation workflows that retain enrollment history.</li>
+        <li>Role-based user management.</li>
+        <li>Dashboard date/status filters, enrollment statistics, charts, course counts, and recent activity.</li>
+        <li>Sanctum student JSON API.</li>
+    </ul>
+    <h2>Requirements</h2>
+    <ul><li>PHP 8.2+, Composer, Node.js/npm, and a Laravel-supported database.</li></ul>
+    <p>The example environment uses SQLite. Set up MySQL or another supported database in <code>.env</code> if desired.</p>
+    <h2>Install and run</h2>
+    <pre>composer install
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+php artisan key:generate
+npm install
+if (!(Test-Path database\database.sqlite)) { New-Item -ItemType File -Path database\database.sqlite }
+php artisan migrate --seed
+npm run build
+php artisan storage:link
+php artisan serve</pre>
+    <p>Run <code>npm run dev</code> in a separate terminal while developing frontend assets. Configure the local database and application URL in <code>.env</code>. Never commit production credentials or the local environment file.</p>
+    <h2>Initial administrator</h2>
+    <p>The default database seeder creates <code>test@example.com</code>. Promote an existing local account with:</p>
+    <pre>php artisan users:make-admin test@example.com</pre>
+    <p>This makes the account an active administrator. Only run it for an account you control.</p>
+    <h2>Roles and primary pages</h2>
+    <ul>
+        <li><strong>Admin:</strong> Academic management and user access management.</li>
+        <li><strong>Staff:</strong> Academic management and staff dashboard.</li>
+        <li><strong>Student:</strong> Own student profile and enrollment portal.</li>
+    </ul>
+    <p>Protected routes require an active account; the staff dashboard also requires verified email. New self-registered users start inactive pending administrator approval.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:9pt">
+        <thead><tr style="background:#eaf0f8"><th style="padding:6px;border:1px solid #cbd5e1;text-align:left">Path</th><th style="padding:6px;border:1px solid #cbd5e1;text-align:left">Purpose</th></tr></thead>
+        <tbody>
+            <tr><td style="padding:6px;border:1px solid #cbd5e1"><code>/dashboard</code></td><td style="padding:6px;border:1px solid #cbd5e1">Admin/staff reports and activity overview</td></tr>
+            <tr><td style="padding:6px;border:1px solid #cbd5e1"><code>/student/dashboard</code></td><td style="padding:6px;border:1px solid #cbd5e1">Student profile and enrollment history</td></tr>
+            <tr><td style="padding:6px;border:1px solid #cbd5e1"><code>/students</code>, <code>/courses</code>, <code>/subjects</code>, <code>/year-levels</code>, <code>/enrollments</code></td><td style="padding:6px;border:1px solid #cbd5e1">Admin/staff academic management</td></tr>
+            <tr><td style="padding:6px;border:1px solid #cbd5e1"><code>/users</code></td><td style="padding:6px;border:1px solid #cbd5e1">Administrator-only user management</td></tr>
+            <tr><td style="padding:6px;border:1px solid #cbd5e1"><code>/api/students</code></td><td style="padding:6px;border:1px solid #cbd5e1">Sanctum-protected JSON API</td></tr>
+        </tbody>
+    </table>
+    <h2>Testing</h2>
+    <div class="callout"><strong>Use a disposable test database.</strong> PHPUnit does not force a test database in this project, so tests may otherwise connect to the database selected in <code>.env</code>.</div>
+    <pre>php artisan test</pre>
+    <p>Focused examples: <code>php artisan test --filter=StudentApiTest</code> and <code>php artisan test --filter=EnrollmentTest</code>.</p>
+    <p>PHPUnit uses an in-memory SQLite database by default; feature tests refresh their schema. Explicit environment overrides should point only to a disposable test database.</p>
+    <h2>More documentation</h2>
+    <ul>
+        <li><code>DATABASE_SCHEMA.pdf</code> — database tables, migrations, and relationships.</li>
+        <li><code>LARAVEL_CONTROLLERS_CRUD_ROUTES.pdf</code> — controllers, CRUD workflows, and route access.</li>
+        <li><code>API_DOCUMENTATION.pdf</code> — API authentication, endpoints, validation, and response format.</li>
+        <li><code>REPORTS_DOCUMENTATION.pdf</code> — dashboard metrics and report filters.</li>
+        <li><code>AUTOMATED_TESTING.pdf</code> — feature/unit test coverage and test commands.</li>
+        <li><code>BUG_VALIDATION_SECURITY_REVIEW.pdf</code> — test and source review summary.</li>
+    </ul>
+</body>
+</html>

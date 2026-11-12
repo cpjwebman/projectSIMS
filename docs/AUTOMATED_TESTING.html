@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Automated Testing - Laravel Feature and Unit Tests</title>
+    <style>
+        @page { size: A4; margin: 17mm 15mm 18mm; }
+        :root { color: #172033; font: 9.4pt/1.44 "Segoe UI", Arial, sans-serif; }
+        body { margin: 0; }
+        h1, h2, h3 { color: #102a43; page-break-after: avoid; }
+        h1 { font-size: 26pt; line-height: 1.14; }
+        h2 { margin-top: 21px; padding-bottom: 5px; border-bottom: 1px solid #cbd5e1; font-size: 16pt; }
+        h3 { margin-top: 14px; font-size: 10.5pt; }
+        p { margin: 6px 0 9px; }
+        li { margin: 3px 0; }
+        code, pre { font-family: Consolas, "Courier New", monospace; font-size: 8pt; }
+        code { padding: 1px 3px; background: #f1f5f9; }
+        pre { padding: 9px; border: 1px solid #dbe3ec; background: #f8fafc; white-space: pre-wrap; page-break-inside: avoid; }
+        table { width: 100%; margin: 7px 0 12px; border-collapse: collapse; font-size: 7.9pt; page-break-inside: auto; }
+        thead { display: table-header-group; }
+        tr { page-break-inside: avoid; }
+        th, td { padding: 5px 6px; border: 1px solid #cbd5e1; text-align: left; vertical-align: top; }
+        th { color: #102a43; background: #eaf0f8; }
+        .cover { min-height: 237mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+        .eyebrow { color: #2563eb; font-size: 9pt; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+        .subtitle { max-width: 137mm; color: #526174; font-size: 13pt; }
+        .meta { margin-top: 25px; padding-top: 11px; border-top: 2px solid #2563eb; color: #526174; }
+        .callout { margin: 9px 0; padding: 8px 10px; border-left: 4px solid #2563eb; background: #eff6ff; page-break-inside: avoid; }
+        .warning { border-left-color: #d97706; background: #fffbeb; }
+        .small { color: #526174; font-size: 7.8pt; }
+        .section-break { page-break-before: always; }
+    </style>
+</head>
+<body>
+    <section class="cover">
+        <p class="eyebrow">SMS | Quality Engineering</p>
+        <h1>Automated Testing<br>with Laravel</h1>
+        <p class="subtitle">Feature tests, unit tests, safe database isolation, project coverage, and repeatable commands for the Student Management System.</p>
+        <div class="meta">
+            <p><strong>Test framework:</strong> Pest on PHPUnit</p>
+            <p><strong>Application:</strong> Laravel 12</p>
+            <p><strong>Verified run:</strong> 58 passing tests · 397 assertions</p>
+        </div>
+    </section>
+
+    <h2>1. Testing goals</h2>
+    <p>Automated tests protect the application's academic workflows, authorization boundaries, validation behavior, and model calculations. A repeatable test run should provide fast feedback while ensuring test data is isolated from local or production databases.</p>
+    <div class="callout"><strong>Current configuration:</strong> <code>phpunit.xml</code> selects an in-memory SQLite database for test runs. Feature tests use Laravel's <code>RefreshDatabase</code> trait through <code>tests/Pest.php</code>.</div>
+
+    <h2>2. Feature tests and unit tests</h2>
+    <table>
+        <thead><tr><th>Test type</th><th>Purpose</th><th>Project examples</th></tr></thead>
+        <tbody>
+            <tr><td>Feature</td><td>Exercise integrated HTTP, routing, middleware, validation, database persistence, and rendered responses across the Laravel application.</td><td>Enrollment approval, student portal ownership, API CRUD/auth, dashboard filters, profile updates, login, and role access under <code>tests/Feature</code>.</td></tr>
+            <tr><td>Unit</td><td>Verify a focused class/model behavior without booting the full HTTP flow or requiring a database.</td><td>Enrollment total-unit accessor using an in-memory Eloquent relation in <code>tests/Unit/StudentEnrollmentTest.php</code>.</td></tr>
+        </tbody>
+    </table>
+    <p>Use a feature test when correctness depends on route middleware, request validation, persistence, transactions, response status, or user-facing behavior. Use a unit test for a small deterministic rule or calculation with minimal dependencies.</p>
+
+    <h2>3. Running tests</h2>
+    <h3>Complete suite</h3>
+    <pre>php artisan test</pre>
+    <h3>Focused tests</h3>
+    <pre>php artisan test --filter=EnrollmentTest
+php artisan test --filter=StudentApiTest
+php artisan test --filter=StudentEnrollmentTest
+php artisan test --testsuite=Unit</pre>
+    <h3>Useful supporting commands</h3>
+    <pre>php artisan test --help
+php artisan route:list --path=api
+php artisan migrate:status</pre>
+    <p>Run commands from the Laravel project root after dependencies are installed. Pest's name filter can target a test class/file or matching test description.</p>
+
+    <h2>4. Test safety and database isolation</h2>
+    <ul>
+        <li>PHPUnit's configured test connection is SQLite with <code>:memory:</code> storage. Schema and data exist only for the test process.</li>
+        <li>Feature tests use <code>RefreshDatabase</code>, so each test starts from a migrated clean schema.</li>
+        <li>A shell-level <code>DB_CONNECTION</code> or <code>DB_DATABASE</code> override may replace the configured test values. Verify that overrides point only to disposable test data.</li>
+        <li>Do not point a migration-refreshing test suite at a shared development or production database.</li>
+        <li>Tests that create tokens, users, uploads, enrollments, or catalog records should assert both the expected result and the important failure/no-side-effect behavior.</li>
+    </ul>
+
+    <h2 class="section-break">5. Existing feature coverage</h2>
+    <table>
+        <thead><tr><th>Area</th><th>Coverage examples</th><th>Test files</th></tr></thead>
+        <tbody>
+            <tr><td>Enrollment lifecycle</td><td>Create and update normalized enrollment; filter and inspect; prevent duplicates; approve pending request; persist approver; align subject statuses; cancel pending while preserving history.</td><td><code>tests/Feature/EnrollmentTest.php</code></td></tr>
+            <tr><td>Student portal</td><td>View only linked profile/history; request eligible subjects; reject ineligible subjects and duplicate periods; cancel only own pending enrollment; profile/photo update.</td><td><code>tests/Feature/StudentPortalTest.php</code></td></tr>
+            <tr><td>Student API</td><td>Token-authenticated CRUD; 201/204 responses; unauthorized and inactive-role rejection; student-role rejection; invalid payload and no-create-on-validation-failure.</td><td><code>tests/Feature/Api/StudentApiTest.php</code></td></tr>
+            <tr><td>Authentication</td><td>Login, logout, inactive-account denial, role redirect, registration activation defaults, email verification, password reset and password changes.</td><td><code>tests/Feature/Auth</code></td></tr>
+            <tr><td>Authorization and users</td><td>Role-gated access, user activation/role assignment, self-protection rules, admin bootstrap command.</td><td><code>tests/Feature/UserManagementTest.php</code></td></tr>
+            <tr><td>Academic resources</td><td>Student/course/subject/year-level create, validation, update, list and delete flows.</td><td><code>tests/Feature/StudentTest.php</code>, <code>CourseTest.php</code>, <code>SubjectTest.php</code>, <code>YearLevelTest.php</code></td></tr>
+            <tr><td>Dashboard and discovery</td><td>Dashboard metrics/charts by year, month and status; search filters and pagination query retention.</td><td><code>tests/Feature/DashboardTest.php</code>, <code>IndexSearchTest.php</code></td></tr>
+            <tr><td>Account profile</td><td>Profile edit/update, email verification reset on email change, password-confirmed account deletion.</td><td><code>tests/Feature/ProfileTest.php</code></td></tr>
+        </tbody>
+    </table>
+
+    <h2>6. Unit test example</h2>
+    <p><code>StudentEnrollment::getTotalUnitsAttribute()</code> sums subject units from its loaded many-to-many relation. This is a deterministic calculation, so a unit test can supply an in-memory relation without database setup:</p>
+    <pre>test('student enrollment total units sum the assigned subjects', function () {
+    $enrollment = new StudentEnrollment;
+    $enrollment->setRelation('subjects', collect([
+        new Subject(['units' => 3]),
+        new Subject(['units' => 2]),
+    ]));
+
+    expect($enrollment->total_units)->toBe(5);
+});</pre>
+    <p>A second test verifies that no assigned subjects yields zero. These tests are in <code>tests/Unit/StudentEnrollmentTest.php</code>.</p>
+
+    <h2>7. Feature test example</h2>
+    <p>The API validation test exercises routing, Sanctum authentication, request validation, JSON response behavior, and absence of an unintended database write:</p>
+    <pre>$this->withToken($token)
+    ->postJson('/api/students', [
+        'student_number' => 'API-INVALID',
+        'first_name' => '',
+        'email' => 'not-an-email',
+        'course_id' => 999999,
+        'year_level_id' => 999999,
+    ])
+    ->assertUnprocessable()
+    ->assertJsonValidationErrors([
+        'first_name', 'email', 'course_id', 'year_level_id',
+    ]);
+
+$this->assertDatabaseMissing('students', [
+    'student_number' => 'API-INVALID',
+]);</pre>
+    <p>This verifies the HTTP contract rather than invoking a controller method directly.</p>
+
+    <h2>8. Test conventions for new changes</h2>
+    <ol>
+        <li>Write a test from an observable acceptance criterion.</li>
+        <li>Cover a successful path and the most important invalid/unauthorized path.</li>
+        <li>Assert persisted state and absence of partial writes for transactional flows.</li>
+        <li>Use factories or small explicit fixtures; avoid depending on shared environment records.</li>
+        <li>Keep tests deterministic: control dates, avoid external network calls, and fake storage/services where appropriate.</li>
+        <li>Run the focused test first, then the full suite before handoff.</li>
+        <li>Report failures and environment constraints honestly; do not convert failing checks into silent success.</li>
+    </ol>
+
+    <h2>9. Verified run</h2>
+    <div class="callout"><strong>Result:</strong> <code>php artisan test</code> completed with 58 passed tests and 397 assertions in 3.98 seconds. This run used the in-memory SQLite configuration from <code>phpunit.xml</code>.</div>
+    <p>The suite also includes tests for role restrictions, inactive accounts, enrollment ownership, catalog validation, account recovery, and dashboard report behavior. Test counts may change as coverage grows.</p>
+
+    <h2>10. Key files</h2>
+    <ul>
+        <li><code>phpunit.xml</code> — test suites and isolated SQLite settings.</li>
+        <li><code>tests/Pest.php</code> — Pest configuration and shared feature-test database refresh.</li>
+        <li><code>tests/Feature</code> — integrated Laravel feature tests.</li>
+        <li><code>tests/Unit/StudentEnrollmentTest.php</code> — model-level unit tests.</li>
+        <li><code>README.md</code> — quick-start and test commands.</li>
+    </ul>
+</body>
+</html>

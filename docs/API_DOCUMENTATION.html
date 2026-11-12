@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Student Management System API Documentation</title>
+    <style>
+        @page { size: A4; margin: 17mm 15mm 18mm; }
+        :root { color: #172033; font: 9.4pt/1.44 "Segoe UI", Arial, sans-serif; }
+        body { margin: 0; }
+        h1, h2, h3 { color: #102a43; page-break-after: avoid; }
+        h1 { font-size: 26pt; line-height: 1.15; }
+        h2 { margin-top: 22px; padding-bottom: 5px; border-bottom: 1px solid #cbd5e1; font-size: 16pt; }
+        h3 { margin-top: 15px; font-size: 11pt; }
+        p { margin: 6px 0 9px; }
+        li { margin: 3px 0; }
+        code, pre { font-family: Consolas, "Courier New", monospace; font-size: 8.1pt; }
+        code { padding: 1px 3px; background: #f1f5f9; }
+        pre { padding: 9px; border: 1px solid #dbe3ec; background: #f8fafc; white-space: pre-wrap; page-break-inside: avoid; }
+        table { width: 100%; margin: 7px 0 13px; border-collapse: collapse; font-size: 8pt; page-break-inside: auto; }
+        thead { display: table-header-group; }
+        tr { page-break-inside: avoid; }
+        th, td { padding: 5px 6px; border: 1px solid #cbd5e1; text-align: left; vertical-align: top; }
+        th { color: #102a43; background: #eaf0f8; }
+        .cover { min-height: 237mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+        .eyebrow { color: #2563eb; font-size: 9pt; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+        .subtitle { max-width: 135mm; color: #526174; font-size: 13pt; }
+        .meta { margin-top: 25px; padding-top: 11px; border-top: 2px solid #2563eb; color: #526174; }
+        .callout { margin: 10px 0; padding: 9px 11px; border-left: 4px solid #2563eb; background: #eff6ff; page-break-inside: avoid; }
+        .warning { border-left-color: #d97706; background: #fffbeb; }
+        .small { color: #526174; font-size: 8pt; }
+        .section-break { page-break-before: always; }
+    </style>
+</head>
+<body>
+    <section class="cover">
+        <p class="eyebrow">SMS | API Reference</p>
+        <h1>Student Management<br>System API</h1>
+        <p class="subtitle">Authentication, endpoints, request validation, response formats, and error handling for the application's JSON API.</p>
+        <div class="meta">
+            <p><strong>Base path:</strong> <code>/api</code></p>
+            <p><strong>Authentication:</strong> Laravel Sanctum bearer token</p>
+            <p><strong>Source:</strong> <code>routes/api.php</code>, API student controller, resource, and feature tests</p>
+        </div>
+    </section>
+    <h2>1. Scope and conventions</h2>
+    <p>The current API exposes CRUD endpoints for student records and a signed-in-user endpoint. It does not expose API resources for courses, subjects, year levels, or enrollment management. Web enrollment workflows are documented separately.</p>
+    <ul>
+        <li>Use JSON requests and responses with <code>Accept: application/json</code>.</li>
+        <li>Student resources are under <code>/api/students</code>.</li>
+        <li>Student resource routes are named <code>api.students.*</code>.</li>
+        <li>IDs are database record IDs; student number is a separate unique business identifier.</li>
+    </ul>
+    <h2>2. Authentication and authorization</h2>
+    <p>All student endpoints require <code>auth:sanctum</code> and the <code>role:admin,staff</code> middleware. The token must belong to a user with admin or staff role whose account is active. Role-denied/inactive requests return 403; unauthenticated requests return 401.</p>
+    <pre>Authorization: Bearer YOUR_SANCTUM_TOKEN
+Accept: application/json
+Content-Type: application/json</pre>
+    <p>This application does not define a route to issue API tokens. Token provisioning must use an approved Sanctum token-issuing mechanism outside this API reference. Never place tokens in source control or client-side public code.</p>
+    <h2>3. Endpoint summary</h2>
+    <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Purpose</th><th>Success</th></tr></thead>
+        <tbody>
+            <tr><td>GET</td><td><code>/api/students</code></td><td>List students, 15 per page.</td><td>200</td></tr>
+            <tr><td>POST</td><td><code>/api/students</code></td><td>Create a student record.</td><td>201</td></tr>
+            <tr><td>GET</td><td><code>/api/students/{student}</code></td><td>Retrieve one student.</td><td>200</td></tr>
+            <tr><td>PUT or PATCH</td><td><code>/api/students/{student}</code></td><td>Update a student record.</td><td>200</td></tr>
+            <tr><td>DELETE</td><td><code>/api/students/{student}</code></td><td>Delete a student record.</td><td>204</td></tr>
+            <tr><td>GET</td><td><code>/api/user</code></td><td>Get the current Sanctum-authenticated user.</td><td>200</td></tr>
+        </tbody>
+    </table>
+    <h2>4. Student fields and validation</h2>
+    <table>
+        <thead><tr><th>Field</th><th>Create/update requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+            <tr><td><code>student_number</code></td><td>Required string, max 255, unique.</td><td>Unique rule ignores the current student on update.</td></tr>
+            <tr><td><code>first_name</code></td><td>Required string, max 255.</td><td>—</td></tr>
+            <tr><td><code>last_name</code></td><td>Required string, max 255.</td><td>—</td></tr>
+            <tr><td><code>email</code></td><td>Optional nullable email, max 255.</td><td>Not the login account email field.</td></tr>
+            <tr><td><code>course_id</code></td><td>Required integer, existing course ID.</td><td>Course status is not restricted by this API validator.</td></tr>
+            <tr><td><code>year_level_id</code></td><td>Required integer, existing year level ID.</td><td>—</td></tr>
+            <tr><td><code>phone</code></td><td>Optional nullable string, max 30.</td><td>—</td></tr>
+            <tr><td><code>date_of_birth</code></td><td>Optional nullable date, today or earlier.</td><td>Returned as YYYY-MM-DD or null.</td></tr>
+            <tr><td><code>address</code></td><td>Optional nullable string.</td><td>No explicit max length at this endpoint.</td></tr>
+        </tbody>
+    </table>
+    <div class="callout warning"><strong>Update semantics:</strong> PUT and PATCH use the same required validation rules as create. Despite accepting PATCH, the endpoint currently expects all required student fields; clients should send a complete valid student payload.</div>
+    <h2>5. Create student</h2>
+    <pre>POST /api/students
+Content-Type: application/json
+
+{
+  "student_number": "STU-1001",
+  "first_name": "Avery",
+  "last_name": "Morgan",
+  "email": "avery@example.com",
+  "course_id": 1,
+  "year_level_id": 1,
+  "phone": "555-0101",
+  "date_of_birth": "2005-04-12",
+  "address": "12 College Road"
+}</pre>
+    <p>Returns <code>201 Created</code> with a JSON resource and eagerly loaded course/year-level values.</p>
+    <h2>6. List and retrieve</h2>
+    <p><code>GET /api/students</code> returns a Laravel paginated resource collection sorted by last name, then first name. Pagination follows Laravel's standard <code>data</code>, <code>links</code>, and <code>meta</code> format. The current list endpoint has no search/filter query parameters.</p>
+    <pre>GET /api/students?page=2</pre>
+    <p><code>GET /api/students/{student}</code> uses route model binding. A missing student returns 404.</p>
+    <h2>7. Update and delete</h2>
+    <pre>PATCH /api/students/42
+{
+  "student_number": "STU-1001",
+  "first_name": "Jordan",
+  "last_name": "Morgan",
+  "email": "jordan@example.com",
+  "course_id": 1,
+  "year_level_id": 1
+}</pre>
+    <p>Update returns the refreshed student resource. Delete returns 204 with no response body. The API delete controller does not apply the web controller's explicit enrollment-history guard; relational database constraints determine whether related data prevents deletion. Review that behavior carefully before using delete on production records.</p>
+    <h2>8. Student resource shape</h2>
+    <pre>{
+  "data": {
+    "id": 42,
+    "student_number": "STU-1001",
+    "first_name": "Avery",
+    "last_name": "Morgan",
+    "email": "avery@example.com",
+    "course_id": 1,
+    "course": {
+      "id": 1,
+      "course_code": "BSCS",
+      "name": "Computer Science"
+    },
+    "year_level_id": 1,
+    "year_level": {
+      "id": 1,
+      "year_level": 1,
+      "name": "First Year"
+    },
+    "phone": "555-0101",
+    "date_of_birth": "2005-04-12",
+    "address": "12 College Road",
+    "created_at": "2026-11-07T04:00:00.000000Z",
+    "updated_at": "2026-11-07T04:00:00.000000Z"
+  }
+}</pre>
+    <p>Nested course and year-level objects are included when those relations are loaded by the endpoint. Sensitive login fields such as password are not part of StudentResource.</p>
+    <h2 class="section-break">9. Errors and status codes</h2>
+    <table>
+        <thead><tr><th>Status</th><th>Meaning</th><th>Typical cause</th></tr></thead>
+        <tbody>
+            <tr><td>200</td><td>Success</td><td>List, show, update, or authenticated user request.</td></tr>
+            <tr><td>201</td><td>Created</td><td>Student created.</td></tr>
+            <tr><td>204</td><td>No Content</td><td>Student deleted.</td></tr>
+            <tr><td>401</td><td>Unauthenticated</td><td>Missing or invalid bearer token.</td></tr>
+            <tr><td>403</td><td>Forbidden</td><td>Inactive account or account role not allowed.</td></tr>
+            <tr><td>404</td><td>Not Found</td><td>Bound student ID does not exist.</td></tr>
+            <tr><td>422</td><td>Validation failed</td><td>Missing/invalid fields, duplicate student number, or nonexistent course/year level.</td></tr>
+        </tbody>
+    </table>
+    <p>Laravel validation errors are returned as JSON when the client sends <code>Accept: application/json</code>; the standard response includes a message and field-keyed <code>errors</code> object.</p>
+    <h2>10. Testing and source</h2>
+    <pre>php artisan route:list --path=api
+php artisan test --filter=StudentApiTest</pre>
+    <p>The API feature tests cover authenticated list/show/create/update/delete, unauthenticated rejection, and denial for inactive token owners. Source files: <code>routes/api.php</code>, <code>app/Http/Controllers/Api/StudentController.php</code>, <code>app/Http/Resources/StudentResource.php</code>, <code>app/Http/Middleware/EnsureUserHasRole.php</code>, and <code>tests/Feature/Api/StudentApiTest.php</code>.</p>
+</body>
+</html>

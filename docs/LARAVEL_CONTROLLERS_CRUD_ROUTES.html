@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Laravel Controllers, CRUD Operations and Routes</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 17mm 15mm 18mm;
+        }
+
+        :root {
+            color: #172033;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.43;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        h1, h2, h3 {
+            color: #102a43;
+            page-break-after: avoid;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 27pt;
+            line-height: 1.13;
+        }
+
+        h2 {
+            margin: 23px 0 9px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 16pt;
+        }
+
+        h3 {
+            margin: 16px 0 6px;
+            font-size: 11pt;
+        }
+
+        p {
+            margin: 6px 0 9px;
+        }
+
+        ul, ol {
+            margin: 5px 0 10px;
+            padding-left: 21px;
+        }
+
+        li {
+            margin: 3px 0;
+        }
+
+        code, pre {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 8.3pt;
+        }
+
+        code {
+            padding: 1px 3px;
+            background: #f1f5f9;
+        }
+
+        pre {
+            padding: 9px;
+            border: 1px solid #dbe3ec;
+            background: #f8fafc;
+            white-space: pre-wrap;
+            page-break-inside: avoid;
+        }
+
+        table {
+            width: 100%;
+            margin: 7px 0 13px;
+            border-collapse: collapse;
+            font-size: 8.15pt;
+            page-break-inside: auto;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tr {
+            page-break-inside: avoid;
+        }
+
+        th, td {
+            padding: 5px 6px;
+            border: 1px solid #cbd5e1;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: #102a43;
+            background: #eaf0f8;
+        }
+
+        .cover {
+            min-height: 237mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+        }
+
+        .eyebrow {
+            margin-bottom: 13px;
+            color: #2563eb;
+            font-size: 9pt;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            max-width: 137mm;
+            color: #526174;
+            font-size: 13pt;
+        }
+
+        .meta {
+            margin-top: 27px;
+            padding-top: 11px;
+            border-top: 2px solid #2563eb;
+            color: #526174;
+        }
+
+        .callout {
+            margin: 10px 0;
+            padding: 9px 11px;
+            border-left: 4px solid #2563eb;
+            background: #eff6ff;
+            page-break-inside: avoid;
+        }
+
+        .warning {
+            border-left-color: #d97706;
+            background: #fffbeb;
+        }
+
+        .diagram {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 8pt;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            page-break-inside: avoid;
+        }
+
+        .small {
+            color: #526174;
+            font-size: 8pt;
+        }
+
+        .section-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <section class="cover">
+        <div class="eyebrow">SMS | Laravel Application Guide</div>
+        <h1>Controllers, CRUD<br>Operations &amp; Routes</h1>
+        <p class="subtitle">A code-based reference to the application's web and API routes, controller responsibilities, access controls, validation, and CRUD workflows.</p>
+        <div class="meta">
+            <p><strong>Source of truth:</strong> <code>routes/web.php</code>, <code>routes/api.php</code>, <code>routes/auth.php</code>, controllers, and the role middleware.</p>
+            <p><strong>Route check:</strong> Application route list was inspected with <code>php artisan route:list --except-vendor</code>.</p>
+            <p><strong>Scope:</strong> Student management system web application and Sanctum-protected student JSON API.</p>
+        </div>
+    </section>
+
+    <h2>1. Application structure</h2>
+    <p>Routes map HTTP requests to controller actions. Web controllers generally validate form input, operate on Eloquent models, and return Blade views or redirects with session messages. The API student controller returns JSON resources and HTTP status codes.</p>
+    <div class="diagram">routes/web.php ── web/session/CSRF ── role &amp; auth middleware ── Controllers ── Blade / redirect
+routes/auth.php ─ guest/auth flows ───────────────────── Auth controllers
+routes/api.php ─── Sanctum token + role middleware ───── API StudentController ── JSON resource
+bootstrap/app.php ─ registers the "role" middleware alias</div>
+
+    <h2>2. Access control</h2>
+    <table>
+        <thead><tr><th>Route group</th><th>Middleware</th><th>Access</th></tr></thead>
+        <tbody>
+            <tr><td>Staff dashboard</td><td><code>auth</code>, <code>verified</code>, <code>role:admin,staff</code></td><td>Authenticated, email-verified administrators and staff.</td></tr>
+            <tr><td>Student portal and student self-service</td><td><code>auth</code>, <code>role:student</code></td><td>Active student-role accounts.</td></tr>
+            <tr><td>Academic administration resources</td><td><code>auth</code>, <code>role:admin,staff</code></td><td>Active administrators and staff manage courses, enrollments, students, subjects, and year levels.</td></tr>
+            <tr><td>User access management</td><td><code>auth</code>, <code>role:admin</code></td><td>Active administrator only.</td></tr>
+            <tr><td>Profile settings</td><td><code>auth</code>, <code>role:admin,staff</code></td><td>Administrators and staff manage their account profile.</td></tr>
+            <tr><td>API student resource</td><td><code>auth:sanctum</code>, <code>role:admin,staff</code></td><td>Sanctum-authenticated active administrator/staff tokens.</td></tr>
+            <tr><td>Authentication routes</td><td><code>guest</code> or <code>auth</code></td><td>Guest-only login/register/reset flows; authenticated verification, password, and logout flows.</td></tr>
+        </tbody>
+    </table>
+    <div class="callout">
+        The <code>role</code> middleware is registered in <code>bootstrap/app.php</code>. <code>EnsureUserHasRole</code> returns HTTP 403 unless the request has an active user whose role is explicitly allowed.
+    </div>
+
+    <h2>3. Web routes: academic CRUD</h2>
+    <p>Resource routes use Laravel's standard named routes and implicit model binding. Resource forms use POST for create; updates and deletes use the appropriate HTTP verb, commonly with Blade method spoofing.</p>
+    <table>
+        <thead><tr><th>Resource</th><th>Methods and URI</th><th>Route names / action</th><th>Availability</th></tr></thead>
+        <tbody>
+            <tr><td>Courses</td><td>GET <code>/courses</code>; GET <code>/courses/create</code>; POST <code>/courses</code>; GET <code>/courses/{course}/edit</code>; PUT/PATCH <code>/courses/{course}</code>; DELETE <code>/courses/{course}</code></td><td><code>courses.index/create/store/edit/update/destroy</code></td><td>Admin/staff; show route omitted.</td></tr>
+            <tr><td>Students</td><td>GET <code>/students</code>; GET <code>/students/create</code>; POST <code>/students</code>; GET <code>/students/{student}/edit</code>; PUT/PATCH <code>/students/{student}</code>; DELETE <code>/students/{student}</code></td><td><code>students.index/create/store/edit/update/destroy</code></td><td>Admin/staff; show route omitted.</td></tr>
+            <tr><td>Subjects</td><td>GET <code>/subjects</code>; GET <code>/subjects/create</code>; POST <code>/subjects</code>; GET <code>/subjects/{subject}</code>; GET <code>/subjects/{subject}/edit</code>; PUT/PATCH <code>/subjects/{subject}</code>; DELETE <code>/subjects/{subject}</code></td><td><code>subjects.index/create/store/show/edit/update/destroy</code></td><td>Admin/staff.</td></tr>
+            <tr><td>Year levels</td><td>GET <code>/year-levels</code>; GET <code>/year-levels/create</code>; POST <code>/year-levels</code>; GET <code>/year-levels/{year_level}/edit</code>; PUT/PATCH <code>/year-levels/{year_level}</code>; DELETE <code>/year-levels/{year_level}</code></td><td><code>year-levels.index/create/store/edit/update/destroy</code></td><td>Admin/staff; show route omitted.</td></tr>
+            <tr><td>Enrollments</td><td>GET <code>/enrollments</code>; GET <code>/enrollments/create</code>; POST <code>/enrollments</code>; GET <code>/enrollments/{enrollment}</code>; GET <code>/enrollments/{enrollment}/edit</code>; PUT/PATCH <code>/enrollments/{enrollment}</code>; DELETE <code>/enrollments/{enrollment}</code>; PATCH <code>/enrollments/{enrollment}/approve</code></td><td><code>enrollments.index/create/store/show/edit/update/destroy</code>; <code>enrollments.approve</code></td><td>Admin/staff.</td></tr>
+            <tr><td>Users</td><td>GET <code>/users</code>; PUT/PATCH <code>/users/{user}</code>; DELETE <code>/users/{user}</code></td><td><code>users.index/update/destroy</code></td><td>Admin only; this is not full user CRUD.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>CoursesController / CourseController</h3>
+    <table>
+        <thead><tr><th>Action</th><th>Behavior</th></tr></thead>
+        <tbody>
+            <tr><td><code>index</code></td><td>Optional search across course code, name, and description; alphabetic order; 10 per page with query parameters retained.</td></tr>
+            <tr><td><code>create</code>, <code>edit</code></td><td>Render course forms.</td></tr>
+            <tr><td><code>store</code>, <code>update</code></td><td>Validate required unique course code and required name; description is optional; status is active/inactive when supplied and defaults to active.</td></tr>
+            <tr><td><code>destroy</code></td><td>Reject deletion when referenced by students, subjects, or either enrollment relation; advise deactivation instead.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>StudentController</h3>
+    <table>
+        <thead><tr><th>Action</th><th>Behavior</th></tr></thead>
+        <tbody>
+            <tr><td><code>index</code></td><td>Search student number, name, email, phone, course, and year level; eager-load course/year level; sort by last/first name; paginate 10.</td></tr>
+            <tr><td><code>create</code>, <code>edit</code></td><td>Render forms with course, year-level, and eligible student-role user options.</td></tr>
+            <tr><td><code>store</code>, <code>update</code></td><td>Require unique student number, first/last name, valid course/year level; optional valid email, unique linked student-role user, phone (max 30), non-future date of birth, and address.</td></tr>
+            <tr><td><code>destroy</code></td><td>Blocks deletion while legacy or normalized enrollment history exists.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>SubjectController and YearLevelController</h3>
+    <table>
+        <thead><tr><th>Controller</th><th>Listing and validation</th><th>Delete behavior</th></tr></thead>
+        <tbody>
+            <tr><td><code>SubjectController</code></td><td>Filter/search by code/name/description, course, year level, and active state; eager-load placements; 10 per page. Create/update requires unique subject code, name, units (1-255), existing course and year level, and active/inactive status; description optional.</td><td>Blocks deletion if referenced by legacy or normalized subject enrollment; deactivate instead.</td></tr>
+            <tr><td><code>YearLevelController</code></td><td>Search name or numeric level; 10 per page. Create/update requires name and unique integer year level (1-255); status is active/inactive if supplied, otherwise active.</td><td>Blocks deletion when referenced by students, subjects, or enrollment history; deactivate instead.</td></tr>
+        </tbody>
+    </table>
+
+    <h2 class="section-break">4. Enrollment CRUD and approval</h2>
+    <p><code>EnrollmentController</code> works with the normalized <code>StudentEnrollment</code> model; each record represents one student's course/year-level enrollment in a school year. Selected subjects are stored as related subject-enrollment rows.</p>
+    <table>
+        <thead><tr><th>Action</th><th>Behavior</th></tr></thead>
+        <tbody>
+            <tr><td><code>index</code></td><td>Search student, course, year level, school year, status, and subjects. Optional filters include student, course, year level, school year, and pending/approved/rejected/cancelled status. Loads related records and paginates 10.</td></tr>
+            <tr><td><code>create</code>, <code>show</code>, <code>edit</code></td><td>Show enrollment form/details. Edit is allowed only while pending (otherwise 403).</td></tr>
+            <tr><td><code>store</code></td><td>Validates an existing student, active course/year level, YYYY-YYYY school year, date, and one or more distinct subject IDs. Subjects must be active and assigned to the selected course and year level. Creates enrollment and subjects in a transaction; prevents duplicate student/course/year-level/school-year enrollment.</td></tr>
+            <tr><td><code>update</code></td><td>Only pending enrollments can be edited. Replaces subject assignments and updates enrollment fields atomically in a transaction.</td></tr>
+            <tr><td><code>approve</code></td><td>PATCH action; only pending records transition to approved. Sets approver and approval time and approves all subject assignments in a transaction.</td></tr>
+            <tr><td><code>destroy</code></td><td>For a pending request, marks enrollment and subject assignments cancelled rather than deleting history. Non-pending records are not cancelled.</td></tr>
+        </tbody>
+    </table>
+    <div class="callout warning">
+        The route is named <code>destroy</code> and uses HTTP DELETE, but its business behavior is a soft workflow cancellation via status update—not a database delete. Approval is a separate PATCH route.
+    </div>
+
+    <h2>5. Student self-service routes</h2>
+    <table>
+        <thead><tr><th>Method and URI</th><th>Route name</th><th>Controller / behavior</th></tr></thead>
+        <tbody>
+            <tr><td>GET <code>/student/dashboard</code></td><td><code>student.dashboard</code></td><td><code>StudentPortalController@index</code>: loads linked student profile and enrollment history; lists active courses and year levels.</td></tr>
+            <tr><td>GET <code>/student/profile</code></td><td><code>student.profile.edit</code></td><td><code>StudentProfileController@edit</code>: display account/profile form and course/year-level choices.</td></tr>
+            <tr><td>POST <code>/student/profile</code></td><td><code>student.profile.store</code></td><td>Create and link the signed-in student's profile; returns 409 if one already exists.</td></tr>
+            <tr><td>PATCH <code>/student/profile</code></td><td><code>student.profile.update</code></td><td>Update account and student fields; changing email resets email verification. Optional JPG/JPEG/PNG/WEBP image upload up to 2 MB; photo may be removed.</td></tr>
+            <tr><td>GET <code>/student/enrollment-subjects</code></td><td><code>student.enrollment-subjects</code></td><td><code>StudentPortalController@availableSubjects</code>: returns JSON subjects for a validated active course and year level.</td></tr>
+            <tr><td>POST <code>/student/enrollments</code></td><td><code>student.enrollments.store</code></td><td>Create a pending enrollment for the signed-in student's linked profile with eligible subject selections; duplicates rejected.</td></tr>
+            <tr><td>DELETE <code>/student/enrollments/{enrollment}</code></td><td><code>student.enrollments.destroy</code></td><td>Student may cancel only their own pending request; cancellation retains enrollment/subject history.</td></tr>
+        </tbody>
+    </table>
+    <p>Student profile submission validates unique student number, name/email, existing course/year level, optional contact details/date of birth, and optional profile photo. Enrollment creation requires an active course and year level, a YYYY-YYYY school year, and at least one distinct subject eligible for that placement. A user without a linked student profile receives HTTP 403 for enrollment actions.</p>
+
+    <h2>6. Administration, profile and dashboard</h2>
+    <table>
+        <thead><tr><th>Routes</th><th>Controller behavior</th></tr></thead>
+        <tbody>
+            <tr><td>GET <code>/dashboard</code> (<code>dashboard</code>)</td><td><code>DashboardController@index</code> validates year/month/status filters and provides enrollment statistics, monthly activity, course counts, and recent enrollment records to the dashboard view.</td></tr>
+            <tr><td>GET <code>/profile</code> (<code>profile.edit</code>)</td><td><code>ProfileController@edit</code> renders current account settings.</td></tr>
+            <tr><td>PATCH <code>/profile</code> (<code>profile.update</code>)</td><td>Uses <code>ProfileUpdateRequest</code>: requires valid unique name/email. Email changes clear verification timestamp.</td></tr>
+            <tr><td>DELETE <code>/profile</code> (<code>profile.destroy</code>)</td><td>Requires current password, logs user out, deletes the authenticated account, invalidates the session, and redirects to root.</td></tr>
+            <tr><td>GET <code>/users</code> (<code>users.index</code>)</td><td><code>UserController@index</code>: search name/email/role/active state; alphabetic order; 10 per page.</td></tr>
+            <tr><td>PUT/PATCH <code>/users/{user}</code> (<code>users.update</code>)</td><td>Requires allowed role (admin/staff/student) and boolean active flag. Administrators cannot remove their own administrator access or deactivate themselves.</td></tr>
+            <tr><td>DELETE <code>/users/{user}</code> (<code>users.destroy</code>)</td><td>Deletes another user; prevents deleting the signed-in administrator's own account via User Management.</td></tr>
+        </tbody>
+    </table>
+    <p>The root route redirects authenticated students to the student dashboard, other authenticated users to the staff dashboard, and guests to login.</p>
+
+    <h2>7. Student JSON API</h2>
+    <p>Defined in <code>routes/api.php</code> as a named <code>api.</code> resource. Every student resource action requires a Sanctum token and the active admin/staff role.</p>
+    <table>
+        <thead><tr><th>Method and URI</th><th>Route name / action</th><th>Response</th></tr></thead>
+        <tbody>
+            <tr><td>GET <code>/api/students</code></td><td><code>api.students.index</code></td><td>Paginated collection (15 per page), ordered by last and first name; includes course and year-level data.</td></tr>
+            <tr><td>POST <code>/api/students</code></td><td><code>api.students.store</code></td><td>Validates and creates a student; returns StudentResource with HTTP 201.</td></tr>
+            <tr><td>GET <code>/api/students/{student}</code></td><td><code>api.students.show</code></td><td>Single StudentResource with course and year level.</td></tr>
+            <tr><td>PUT/PATCH <code>/api/students/{student}</code></td><td><code>api.students.update</code></td><td>Validates and updates a student; returns refreshed StudentResource.</td></tr>
+            <tr><td>DELETE <code>/api/students/{student}</code></td><td><code>api.students.destroy</code></td><td>Deletes the student and returns HTTP 204 No Content.</td></tr>
+            <tr><td>GET <code>/api/user</code></td><td>Closure route (no named resource action)</td><td>Returns the current Sanctum-authenticated user; requires <code>auth:sanctum</code>.</td></tr>
+        </tbody>
+    </table>
+    <p>Student API create/update validation requires a unique student number, first and last names, and existing course/year-level IDs. Email, phone, date of birth, and address are optional. Responses are shaped by <code>StudentResource</code>, not raw model serialization.</p>
+    <div class="callout warning">
+        <strong>Behavior difference to note:</strong> Web student deletion explicitly blocks when enrollment history exists. The API controller calls <code>delete()</code> directly and does not apply that guard; database foreign-key behavior determines whether a linked student can be deleted.
+    </div>
+
+    <h2 class="section-break">8. Authentication routes</h2>
+    <table>
+        <thead><tr><th>Guest/auth group</th><th>Method and URI</th><th>Controller / purpose</th></tr></thead>
+        <tbody>
+            <tr><td>Guest</td><td>GET/POST <code>/register</code></td><td><code>RegisteredUserController@create/store</code>. Registration creates a student-role account initially inactive and reports that administrator approval is pending.</td></tr>
+            <tr><td>Guest</td><td>GET/POST <code>/login</code></td><td><code>AuthenticatedSessionController@create/store</code>. Successful login regenerates the session and redirects by role.</td></tr>
+            <tr><td>Guest</td><td>GET/POST <code>/forgot-password</code></td><td><code>PasswordResetLinkController@create/store</code>. Validates email and requests a password reset link.</td></tr>
+            <tr><td>Guest</td><td>GET <code>/reset-password/{token}</code>; POST <code>/reset-password</code></td><td><code>NewPasswordController@create/store</code>. Validates reset token, email, confirmed password and password policy.</td></tr>
+            <tr><td>Authenticated</td><td>GET <code>/verify-email</code>; GET <code>/verify-email/{id}/{hash}</code>; POST <code>/email/verification-notification</code></td><td>Email verification prompt/confirmation/resend. Verification and resend are throttled; confirmation route uses signed URL middleware.</td></tr>
+            <tr><td>Authenticated</td><td>GET/POST <code>/confirm-password</code></td><td>Confirm the current password for protected actions.</td></tr>
+            <tr><td>Authenticated</td><td>PUT <code>/password</code>; POST <code>/logout</code></td><td>Update password after validating current password; log out and invalidate session/token.</td></tr>
+        </tbody>
+    </table>
+
+    <h2>9. CRUD and validation conventions</h2>
+    <ul>
+        <li><strong>Validation:</strong> Controllers use Laravel request validation. Invalid web form requests redirect back with errors and old input; invalid JSON requests receive Laravel's JSON validation response.</li>
+        <li><strong>Unique updates:</strong> Unique keys exclude the current model ID using Laravel's <code>Rule::unique(...)->ignore(...)</code>.</li>
+        <li><strong>Route model binding:</strong> Parameters such as <code>{student}</code>, <code>{course}</code>, and <code>{enrollment}</code> resolve to Eloquent models. Missing records return 404.</li>
+        <li><strong>Web feedback:</strong> Successful changes generally redirect to the list or relevant profile/dashboard with a flash status. Guard failures return field errors or 403.</li>
+        <li><strong>History preservation:</strong> Academic enrollment cancellation changes status instead of deleting records; catalog and student web deletes are guarded where history/relations exist.</li>
+        <li><strong>Transactions:</strong> Enrollment create/update/approval and related subject changes are transactional to keep parent and subject status/data aligned.</li>
+        <li><strong>API responses:</strong> API actions return a JSON resource, 201 for create, and 204 for successful delete. Missing/invalid auth returns 401; role denial returns 403.</li>
+    </ul>
+
+    <h2>10. Inspecting and testing routes</h2>
+    <pre>php artisan route:list
+php artisan route:list --except-vendor
+php artisan route:list --path=students
+php artisan route:list --path=enrollments
+php artisan test --filter=EnrollmentTest
+php artisan test --filter=StudentApiTest</pre>
+    <p class="small">Tests in this project exercise enrollment creation/update/approval/cancellation and student API authentication, CRUD responses, and inactive-user access denial.</p>
+
+    <h2>11. Source files</h2>
+    <p>Primary route definitions: <code>routes/web.php</code>, <code>routes/api.php</code>, and <code>routes/auth.php</code>. Middleware registration: <code>bootstrap/app.php</code>. Role enforcement: <code>app/Http/Middleware/EnsureUserHasRole.php</code>. Relevant controllers are under <code>app/Http/Controllers</code>; the API response shape is in <code>app/Http/Resources/StudentResource.php</code>.</p>
+</body>
+</html>
